@@ -1,0 +1,1685 @@
+:root {
+    --bg-color: #fff0f5; /* Lavender Blush - Softer Pink */
+    --text-color: #4e342e; /* Dark Brown - Softer than black */
+    --accent-color: #e57283; /* Bocchi Pink */
+    --accent-secondary: #fcd53f; /* Nijika Yellow */
+    --accent-blue: #0077b6; /* Ryo Blue */
+    --accent-red: #d93838; /* Kita Red */
+    --font-main: 'Helvetica Neue', 'Arial', sans-serif;
+    --font-mono: 'Courier New', Courier, monospace;
+    
+    /* Elegant Easing Curves */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-main);
+    overflow-x: hidden;
+    width: 100%;
+    overscroll-behavior: none;
+    text-rendering: optimizeLegibility; /* Improved font rendering */
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Scroll Snap Removed per user request */
+html {
+    scroll-behavior: auto; /* Handled by JS */
+}
+
+section, footer {
+    /* No snap */
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    cursor: none; /* Custom cursor */
+}
+
+ul {
+    list-style: none;
+}
+
+/* Loader */
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fce4ec; /* Pink loader background */
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.loader-content {
+    text-align: center;
+    position: relative;
+}
+
+.counter {
+    font-size: 8rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    font-family: var(--font-mono);
+    text-shadow: 4px 4px 0px #fff;
+}
+
+.loader-text {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    letter-spacing: 0.5rem;
+    color: var(--accent-blue);
+    font-weight: bold;
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    from { transform: scale(1); opacity: 0.8; }
+    to { transform: scale(1.1); opacity: 1; }
+}
+
+/* Custom Cursor */
+#cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10000;
+    transform: translate(-50%, -50%);
+}
+
+#cursor-follower {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--accent-color);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s, background 0.3s;
+}
+
+#cursor-follower.active {
+    width: 80px;
+    height: 80px;
+    background: rgba(229, 114, 131, 0.1);
+    border-color: transparent;
+}
+
+/* Background Canvas */
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.5;
+}
+
+/* Smooth Scroll Wrapper */
+#smooth-wrapper {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    will-change: transform;
+}
+
+/* Header */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 2rem 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    mix-blend-mode: difference;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    font-family: var(--font-mono);
+}
+
+nav ul {
+    display: flex;
+    gap: 3rem;
+}
+
+nav a {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+nav a::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: var(--accent-color);
+    transition: transform 0.3s;
+}
+
+nav a:hover::after {
+    transform: translateY(-100%);
+}
+
+nav a span {
+    display: inline-block;
+    transition: transform 0.3s;
+}
+
+nav a:hover span {
+    transform: translateY(-100%);
+}
+
+/* Hero Section */
+.hero {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+}
+
+.hero h1 {
+    font-size: 8vw;
+    line-height: 1;
+    font-weight: 900;
+    text-transform: uppercase;
+    display: block;
+    cursor: default;
+}
+
+/* Line 1: Shake + Color Change */
+.hero-line-1 {
+    transition: color 0.3s;
+}
+
+.hero-line-1:hover {
+    color: var(--accent-color);
+    animation: shake 0.5s infinite;
+}
+
+/* Line 2 Words */
+.hero-line-2 {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.hero-line-2 span {
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+/* Bocchi: Pink + Shrink */
+.word-bocchi:hover {
+    color: var(--accent-color);
+    transform: scale(0.8);
+}
+
+/* And: Gradient (Yellow -> Blue -> Red) */
+.word-and:hover {
+    background: linear-gradient(to right, var(--accent-secondary), var(--accent-blue), var(--accent-red));
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+/* Rock: Shake + Guitar Solo (JS handled sound) */
+.word-rock:hover {
+    animation: shake 0.3s infinite;
+    color: #333; /* Keep color or change? Default blackish */
+}
+
+@keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.pink-text {
+    color: var(--accent-color);
+    -webkit-text-stroke: 2px var(--accent-color);
+    color: transparent;
+}
+
+.subtitle {
+    margin-top: 2rem;
+    font-size: 1.2rem;
+    font-family: var(--font-mono);
+    opacity: 0.7;
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+}
+
+.scroll-indicator .line {
+    width: 1px;
+    height: 50px;
+    background: #fff;
+    animation: scroll 1.5s infinite;
+}
+
+@keyframes scroll {
+    0% { transform: scaleY(0); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+/* Sections General */
+section {
+    padding: 10rem 0;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+    max-width: 1200px;
+}
+
+.section-title {
+    margin-bottom: 5rem;
+}
+
+.section-title h2 {
+    font-size: 4rem;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+}
+
+.jp-title {
+    font-family: var(--font-mono);
+    color: var(--accent-color);
+    font-size: 1.2rem;
+}
+
+/* About Section */
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+}
+
+.about-text p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: #757575; /* Light Gray (Readable) */
+}
+
+.skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.skill-tag {
+    padding: 0.5rem 1.5rem;
+    border: 1px solid #333;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.skill-tag:hover {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #000;
+}
+
+/* Links / Works Section */
+.work-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+.work-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3rem;
+    border-bottom: 1px solid #333;
+    transition: all 0.3s;
+}
+
+.work-item:hover {
+    padding-left: 5rem;
+    background: rgba(255,255,255,0.05);
+}
+
+.work-num {
+    font-family: var(--font-mono);
+    color: #555;
+}
+
+.work-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.work-cat {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    background: #222;
+    border-radius: 50px;
+    font-weight: bold;
+}
+
+/* Fix image size in links section */
+.work-img {
+    width: 200px;
+    height: 120px;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.work-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.work-item:hover .work-img img {
+    transform: scale(1.1);
+}
+
+/* Guitar Section */
+.guitar-section {
+    padding: 10rem 0;
+    background: #1a1a1a;
+    position: relative;
+    z-index: 2;
+}
+
+.guitar-container {
+    background: #222;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 
+        0 20px 50px rgba(0,0,0,0.6),
+        inset 0 0 0 1px rgba(255,255,255,0.1); /* Subtle rim light */
+    border: 1px solid #333;
+    width: 100%; 
+    aspect-ratio: 16/9; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: box-shadow 0.5s ease;
+}
+
+.guitar-container:hover {
+    box-shadow: 
+        0 30px 60px rgba(0,0,0,0.8),
+        inset 0 0 0 1px rgba(255,255,255,0.2),
+        0 0 30px rgba(229, 114, 131, 0.1); /* Pink glow hint */
+}
+
+.guitar-controls {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* 3D Glitch Text Effect */
+.glitch-text {
+    position: relative;
+    font-size: 5rem;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    z-index: 10;
+    text-shadow: 
+        1px 1px 0 var(--accent-blue),
+        -1px -1px 0 var(--accent-color);
+    transition: transform 0.1s;
+    mix-blend-mode: exclusion;
+}
+
+/* Pseudo-elements for Glitch layers */
+.glitch-text::before,
+.glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+}
+
+.glitch-text::before {
+    color: var(--accent-blue);
+    z-index: -1;
+    transform: translate(-2px, -2px);
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+    animation: glitch-anim-1 2s infinite linear alternate-reverse;
+}
+
+.glitch-text::after {
+    color: var(--accent-color);
+    z-index: -2;
+    transform: translate(2px, 2px);
+    clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+    animation: glitch-anim-2 3s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim-1 {
+    0% { transform: translate(-2px, -2px); }
+    20% { transform: translate(-4px, 2px); }
+    40% { transform: translate(2px, -4px); }
+    60% { transform: translate(-2px, 4px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0, 0); }
+}
+
+@keyframes glitch-anim-2 {
+    0% { transform: translate(2px, 2px); }
+    20% { transform: translate(4px, -2px); }
+    40% { transform: translate(-2px, 4px); }
+    60% { transform: translate(2px, -4px); }
+    80% { transform: translate(-2px, 2px); }
+    100% { transform: translate(0, 0); }
+}
+
+/* Gallery Section Layout for Sticky Parallax */
+#gallery {
+    /* Height controls the scroll duration */
+    height: 600vh; 
+    position: relative;
+    background: #050505; /* Deep dark background */
+    z-index: 5;
+}
+
+.gallery-section {
+    position: relative;
+    width: 100%;
+    height: 100%; /* Match parent */
+}
+
+/* The container that gets pinned */
+.gallery-sticky {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    perspective: 1000px; /* For 3D feel */
+    will-change: transform;
+}
+
+.parallax-stream {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+}
+
+.layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    will-change: transform;
+}
+
+/* --- Layer 1: Background Text Wall (Behind Images) --- */
+.layer-back-text {
+    z-index: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    opacity: 1; /* Fully visible */
+    transform: translateZ(-100px) scale(1.1); /* Deep background, scaled to match */
+}
+
+.text-row {
+    display: flex;
+    gap: 2rem; 
+    white-space: nowrap;
+}
+
+.text-row span {
+    font-family: 'Impact', sans-serif;
+    font-size: 15rem; 
+    text-transform: uppercase;
+    line-height: 0.8; 
+}
+
+/* Layer 1: Background - Solid Colors (Same as Front) */
+.layer-back-text .text-row span.bocchi {
+    color: #e57283;
+    -webkit-text-stroke: 0;
+}
+
+.layer-back-text .text-row span.rock {
+    color: #fff;
+    -webkit-text-stroke: 0;
+}
+
+/* --- Layer 2: Images (Middle, Interleaved) --- */
+.layer-images {
+    z-index: 2;
+    padding-left: 5vw; 
+    gap: 15vw; 
+    display: flex;
+    align-items: center;
+    transform: translateZ(0); /* Middle plane */
+}
+
+.gallery-item {
+    position: relative;
+    width: 20vw; /* Smaller images */
+    aspect-ratio: 16/9;
+    flex-shrink: 0;
+    transition: transform 0.3s;
+}
+
+/* Chaos Positioning for 64 items (16n pattern) */
+.gallery-item:nth-child(16n+1) { top: -20vh; transform: rotate(-15deg); z-index: 2; }
+.gallery-item:nth-child(16n+2) { top: 35vh; transform: rotate(10deg); z-index: 1; }
+.gallery-item:nth-child(16n+3) { top: -10vh; transform: rotate(-5deg); z-index: 3; }
+.gallery-item:nth-child(16n+4) { top: 40vh; transform: rotate(20deg); z-index: 1; }
+.gallery-item:nth-child(16n+5) { top: -30vh; transform: rotate(-10deg); z-index: 2; }
+.gallery-item:nth-child(16n+6) { top: 15vh; transform: rotate(5deg); z-index: 3; }
+.gallery-item:nth-child(16n+7) { top: -15vh; transform: rotate(12deg); z-index: 1; }
+.gallery-item:nth-child(16n+8) { top: 25vh; transform: rotate(-8deg); z-index: 2; }
+.gallery-item:nth-child(16n+9) { top: -35vh; transform: rotate(-20deg); z-index: 1; }
+.gallery-item:nth-child(16n+10) { top: 10vh; transform: rotate(15deg); z-index: 3; }
+.gallery-item:nth-child(16n+11) { top: -25vh; transform: rotate(-5deg); z-index: 2; }
+.gallery-item:nth-child(16n+12) { top: 30vh; transform: rotate(8deg); z-index: 1; }
+.gallery-item:nth-child(16n+13) { top: -5vh; transform: rotate(-12deg); z-index: 3; }
+.gallery-item:nth-child(16n+14) { top: 45vh; transform: rotate(18deg); z-index: 1; }
+.gallery-item:nth-child(16n+15) { top: -40vh; transform: rotate(-8deg); z-index: 2; }
+.gallery-item:nth-child(16n+16) { top: 20vh; transform: rotate(10deg); z-index: 3; }
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    /* Full color restored */
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.gallery-item:hover {
+    z-index: 10;
+}
+
+.gallery-item:hover img {
+    /* Slight contrast boost on hover */
+    filter: brightness(1.1) contrast(1.1);
+    transform: scale(1.05); /* Slight zoom */
+    box-shadow: 0 25px 60px rgba(229, 114, 131, 0.5);
+    border-color: var(--accent-color);
+}
+
+
+
+/* --- Let's Rock Section (Wodniack Style - Pink Theme) --- */
+.rock-section {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background-color: #e57283; /* Bocchi Pink */
+    z-index: 20;
+}
+
+.rock-grid-bg {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px);
+    background-size: 100px 100px;
+    transform: perspective(500px) rotateX(20deg); 
+    pointer-events: none;
+    animation: grid-move 20s linear infinite;
+}
+
+@keyframes grid-move {
+    0% { transform: perspective(500px) rotateX(20deg) translateY(0); }
+    100% { transform: perspective(500px) rotateX(20deg) translateY(100px); }
+}
+
+.rock-circle {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    background: #000;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 2;
+    /* Cute wobble animation base state */
+    animation: circle-float 3s ease-in-out infinite;
+}
+
+/* Hover Animation: Scale Up */
+.rock-circle:hover {
+    transform: scale(1.3) rotate(5deg);
+    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; /* Blob shape on hover */
+    background: #fff; /* Invert colors */
+}
+
+/* Contact Content Styles */
+.contact-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none; 
+    z-index: 10;
+}
+
+.rock-circle:hover .contact-content {
+    opacity: 1;
+    pointer-events: auto; /* Enable clicks on hover */
+}
+
+/* Hide decoration on hover */
+.rock-circle:hover .rock-decor-star,
+.rock-circle:hover .rock-caption {
+    opacity: 0;
+}
+
+.contact-header {
+    background: #4A90E2; /* Blue label */
+    color: #fff;
+    padding: 0.2rem 0.8rem;
+    font-family: 'Impact', sans-serif;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    transform: rotate(-2deg);
+}
+
+.contact-sub {
+    background: #4A90E2;
+    color: #fff;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    white-space: nowrap;
+    transform: rotate(1deg);
+}
+
+.contact-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.contact-btn {
+    text-decoration: none;
+    border: 2px solid #e57283; /* Pink border */
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.contact-btn span {
+    background: #4A90E2; /* Blue pill inside */
+    color: #fff;
+    padding: 0.1rem 0.5rem;
+    border-radius: 10px;
+    font-family: 'Impact', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 1px;
+}
+
+.contact-btn:hover {
+    background: #ffe0e5;
+    transform: translateY(-2px);
+}
+
+.contact-dots {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.contact-dots .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.dot.pink { background: #e57283; }
+.dot.yellow { background: #F5A623; }
+.dot.blue { background: #4A90E2; }
+.dot.red { background: #D0021B; }
+
+.rock-footer-mark {
+    position: absolute;
+    bottom: 30px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: #000;
+    letter-spacing: 5px;
+    z-index: 2;
+}
+
+/* Flash Overlay - Soft Pink */
+.flash-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #e57283; /* Soft Pink */
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease-out; /* Slower fade */
+    mix-blend-mode: lighten; /* Glow effect */
+}
+
+.flash-overlay.active {
+    opacity: 0.8; /* Not full white blind */
+}
+
+input[type="range"] {
+    width: 150px;
+    accent-color: var(--accent-secondary);
+}
+
+.instruction p {
+    font-size: 1.2rem;
+}
+
+.key {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: #333;
+    border-radius: 5px;
+    margin: 0 2px;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    border-bottom: 2px solid #000;
+    transition: all 0.1s;
+}
+
+/* Fretboard Wood Texture */
+.fretboard {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    /* Richer Rosewood Gradient */
+    background: linear-gradient(90deg, #3e2723, #4e342e, #3e2723);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 0;
+    box-shadow: 
+        inset 0 0 50px rgba(0,0,0,0.9),
+        0 10px 30px rgba(0,0,0,0.5);
+    cursor: pointer;
+}
+
+/* Strings */
+.string {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    /* Default height, overridden below */
+    height: 4px;
+    background: #e0e0e0; /* Bright Silver */
+    box-shadow: 0 3px 5px rgba(0,0,0,0.8);
+    z-index: 10;
+    transition: transform 0.05s;
+    border-bottom: 1px solid rgba(0,0,0,0.5);
+}
+
+.string::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: rgba(255,255,255,0.8); /* Highlight */
+}
+
+.string:nth-child(1) { height: 2px; } /* High E */
+.string:nth-child(2) { height: 3px; } /* B */
+.string:nth-child(3) { height: 4px; } /* G */
+.string:nth-child(4) { height: 5px; } /* D */
+.string:nth-child(5) { height: 6px; } /* A */
+.string:nth-child(6) { height: 7px; } /* Low E */
+
+.string.active {
+    transform: scaleY(1.5);
+    background: var(--accent-secondary); /* Yellow for active */
+    box-shadow: 0 0 15px var(--accent-secondary);
+}
+
+/* Footer / Contact */
+.footer-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    color: #fff; /* Make all footer text white */
+}
+
+.contact-desc {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.8); /* Slightly transparent white for description */
+}
+
+/* Specific override for footer section title if needed */
+#footer .section-title h2,
+#footer .section-title .jp-title {
+    color: #fff;
+    text-shadow: 0 0 10px var(--accent-color);
+}
+
+.social-links {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.social-btn {
+    padding: 1rem 2rem;
+    border: 2px solid var(--accent-color);
+    border-radius: 50px;
+    font-weight: bold;
+    color: var(--accent-color);
+    transition: all 0.3s;
+    background: transparent;
+}
+
+.social-btn:hover {
+    background: var(--accent-color);
+    color: #fff;
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(229, 114, 131, 0.4);
+}
+
+.character-colors {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+.dot:hover {
+    transform: scale(1.5);
+}
+
+.dot.pink { background: var(--accent-color); }
+.dot.yellow { background: var(--accent-secondary); }
+.dot.blue { background: var(--accent-blue); }
+.dot.red { background: var(--accent-red); }
+
+.copyright {
+    margin-top: 3rem;
+    opacity: 0.5;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+/* Guitar Frets (Vertical bars) */
+.fret-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #8d6e63; /* Metal fret color */
+    border-right: 1px solid rgba(0,0,0,0.5);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Fret Markers (Dots) */
+.fret-dot {
+    position: absolute;
+    top: 50%;
+    width: 15px;
+    height: 15px;
+    background: #d7ccc8; /* Pearl/Inlay color */
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+}
+
+.fret-dot.double {
+    width: 30px;
+    border-radius: 15px; /* Oval for double dot */
+}
+
+/* Fret Numbers */
+.fret-numbers {
+    position: absolute;
+    bottom: -25px;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    display: flex;
+    pointer-events: none;
+}
+
+.fret-numbers span {
+    position: absolute;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* SCROLL TRANSITIONS - DRAMATIC CURTAINS */
+
+/* Common Setup */
+#about, #links, #guitar, #footer {
+    position: relative;
+    overflow: hidden; /* To contain the curtain */
+}
+
+/* 1. About Section - Rich Content, No Curtain */
+#about {
+    position: relative;
+    overflow: hidden;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+
+#about .about-container {
+    width: 90%;
+    max-width: 1600px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+#about .about-left {
+    opacity: 0;
+    transform: translateX(-50px);
+    transition: all 1s var(--ease-out-expo);
+    will-change: opacity, transform; /* Performance hint */
+}
+
+#about .about-right {
+    opacity: 0;
+    transform: translateX(50px);
+    transition: all 1s var(--ease-out-expo) 0.2s;
+    position: relative;
+    height: 80vh; 
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 1rem;
+    will-change: opacity, transform;
+}
+
+#about.in-view .about-left,
+#about.in-view .about-right {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Typography Enrichment */
+.bio-intro {
+    font-size: 2.5rem;
+    font-weight: 900;
+    line-height: 1.2;
+    margin-bottom: 2rem;
+    background: linear-gradient(45deg, var(--text-color), var(--accent-color));
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.bio-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #666;
+    margin-bottom: 3rem;
+    max-width: 90%;
+}
+
+/* Character Collage */
+.char-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s var(--ease-elastic);
+}
+
+.char-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.char-card:hover {
+    transform: scale(0.95);
+    z-index: 10;
+}
+
+.char-card:hover img {
+    transform: scale(1.1);
+}
+
+/* Floating Badges */
+.floating-badge {
+    position: absolute;
+    padding: 1rem 2rem;
+    background: #fff;
+    border: 2px solid var(--accent-color);
+    border-radius: 50px;
+    font-weight: bold;
+    box-shadow: 0 10px 20px rgba(229, 114, 131, 0.3);
+    z-index: 5;
+    animation: float-badge 3s ease-in-out infinite;
+}
+
+.badge-1 { top: 10%; left: -5%; animation-delay: 0s; transform: rotate(-5deg); }
+.badge-2 { bottom: 15%; right: -5%; animation-delay: 1.5s; transform: rotate(5deg); }
+.badge-3 { top: 45%; left: 45%; transform: translate(-50%, -50%); z-index: 20; background: var(--accent-secondary); color: #000; border: none; }
+
+@keyframes float-badge {
+    0%, 100% { transform: translateY(0) rotate(var(--rot)); }
+    50% { transform: translateY(-10px) rotate(var(--rot)); }
+}
+
+
+/* 2. Links Section - Scroll Jacking & Tunnel */
+#links {
+    height: 400vh; /* Create scroll space for animation */
+    position: relative;
+    z-index: 20; /* Keep above guitar to manage transition */
+    background: transparent; 
+}
+
+/* Remove old curtain effect for links to avoid conflict */
+#links::before {
+    display: none;
+}
+
+#links .sticky-wrapper {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    /* Use block layout to allow absolute positioning of children */
+    display: block; 
+}
+
+#tunnel-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Background layer */
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.zoom-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 30; /* Front layer */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* Let clicks pass */
+}
+
+.links-text-container {
+    position: absolute;
+    top: 15%; /* Position from top */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40; /* Above guitar body */
+    width: 80%; /* Match container width */
+    max-width: 1200px;
+    pointer-events: auto;
+    text-align: center;
+}
+
+/* Floating notes replace work items */
+.note-link {
+    transition: transform 0.1s linear, opacity 0.1s linear; 
+    will-change: transform, opacity;
+}
+
+/* Instrument Grid */
+.instrument-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    width: 100%;
+}
+
+.instrument-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.5);
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.instrument-item:hover {
+    transform: translateY(-5px);
+    background: #fff;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.instrument-item img {
+    width: 100%;
+    height: 120px;
+    object-fit: contain;
+    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));
+}
+
+.instrument-item span {
+    font-family: var(--font-mono);
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+/* 3D Proxy Element */
+/* Ring and notes visuals */
+/* Links Section - Transparent to allow hole-zoom effect with Canvas Mask */
+#links {
+    background: transparent;
+    position: relative;
+    z-index: 10;
+}
+
+/* Ensure works-section doesn't override transparency if it has a bg */
+section#links.works-section {
+    background: transparent;
+}
+
+.ring-container {
+    position: absolute; /* Absolute within the sticky-wrapper so it moves with it initially */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* Let clicks pass */
+    z-index: -1; /* Behind text content */
+}
+
+#guitar-body-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.section-title {
+    position: relative;
+    z-index: 40; /* Above guitar body */
+    margin-bottom: 0; /* Remove margin as layout is absolute-ish now */
+    pointer-events: auto;
+}
+
+#guitar-body-canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    pointer-events: none; /* Let clicks pass through to hole */
+}
+
+/* Removed old .guitar-body-shape CSS */
+
+.notes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Let clicks pass through to links */
+}
+
+.note-link {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Softer, deeper shadow */
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.6s var(--ease-elastic), box-shadow 0.3s ease; /* Elastic feel */
+    z-index: 20;
+}
+
+/* Note Stem */
+.note-link::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 25px; 
+    width: 6px;
+    height: 60px;
+    background: #333;
+    border-radius: 3px;
+    transform-origin: bottom right;
+    z-index: -1;
+    transition: background 0.3s;
+}
+
+/* Note Flag */
+.note-link::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -35px; 
+    width: 25px;
+    height: 15px;
+    background: #333;
+    border-radius: 0 100% 0 0;
+    z-index: -1;
+    transition: background 0.3s;
+}
+
+.note-link:hover {
+    transform: scale(1.15) rotate(10deg) !important; 
+    z-index: 25;
+    box-shadow: 0 15px 40px rgba(229, 114, 131, 0.6); /* Pink glow */
+    border-color: var(--accent-color);
+}
+
+.note-link:hover::before,
+.note-link:hover::after {
+    background: var(--accent-color);
+}
+
+
+.note-link img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.note-label {
+    position: absolute;
+    bottom: -22px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Guitar Section - Simplified for smooth handoff */
+#guitar {
+    position: relative;
+    z-index: 10;
+    background: #1a1a1a;
+    min-height: 100vh; /* Ensure full height */
+    /* Removed negative margin to align physical scroll with visual zoom end */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0; /* Override class padding */
+    opacity: 1; /* Make sure it's visible */
+    pointer-events: auto;
+}
+
+/* Gallery Section - Glitch & Parallax */
+.gallery-section {
+    position: relative;
+    background: #000;
+    color: #fff;
+    padding: 5rem 0;
+    overflow: hidden;
+    min-height: 100vh;
+}
+
+.gallery-track {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.gallery-item {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 1px solid #333;
+    transition: transform 0.3s;
+    cursor: pointer;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.gallery-item:hover img {
+    transform: scale(1.1);
+}
+
+/* Glitch Overlay Effect */
+.gallery-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(255,0,0,0.2), rgba(0,0,255,0.2));
+    opacity: 0;
+    transition: opacity 0.3s;
+    mix-blend-mode: hard-light;
+    pointer-events: none;
+}
+
+.gallery-item:hover::after {
+    opacity: 1;
+    animation: glitch-anim 0.3s infinite;
+}
+
+@keyframes glitch-anim {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-5px, 5px); }
+    40% { transform: translate(-5px, -5px); }
+    60% { transform: translate(5px, 5px); }
+    80% { transform: translate(5px, -5px); }
+    100% { transform: translate(0, 0); }
+}
+
+.gallery-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 10;
+    mix-blend-mode: difference;
+}
+
+.gallery-overlay h2 {
+    font-size: 5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    opacity: 0.5;
+    letter-spacing: 10px;
+    white-space: nowrap;
+}
+
+/* Remove CSS Door effect to prevent conflict with Tunnel Zoom */
+#guitar::before, #guitar::after {
+    display: none;
+}
+
+
+/* Footer - Simple Fade with Gradient Transition */
+#footer {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 0.8s ease-out;
+    /* Semi-transparent gray transition from Guitar section (#1a1a1a) to Body color */
+    background: linear-gradient(to bottom, #1a1a1a 0%, rgba(26,26,26,0.8) 30%, rgba(26,26,26,0.2) 70%, transparent 100%);
+    padding-top: 8rem;
+    padding-bottom: 5rem;
+    margin-top: -5rem; /* Overlap with previous section */
+    position: relative;
+    z-index: 5;
+}
+
+#footer.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Dynamic Effects */
+.bocchi-sticker {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
+    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+}
+
+.visual-note {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, #fff, var(--accent-secondary));
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 0 20px var(--accent-secondary);
+    animation: notePop 0.5s ease-out forwards;
+}
+
+@keyframes notePop {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
+/* Key instruction highlight */
+.key.active {
+    color: var(--accent-secondary);
+    text-shadow: 0 0 10px var(--accent-secondary);
+    transform: scale(1.2);
+    display: inline-block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    header { padding: 1.5rem 2rem; }
+    .hero h1 { font-size: 15vw; }
+    
+    /* New About Layout Mobile */
+    #about .about-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        width: 95%;
+    }
+    
+    #about .about-right {
+        height: 50vh; /* Shorter on mobile */
+    }
+    
+    .bio-intro { font-size: 2rem; }
+    
+    .work-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .social-links { flex-direction: column; gap: 1rem; width: 100%; }
+    .social-btn { width: 100%; text-align: center; }
+}
+
+/* Play Button */
+.play-btn {
+    padding: 10px 20px;
+    background: var(--accent-secondary);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Poppins', sans-serif;
+    margin: 10px 0;
+}
+
+.play-btn:hover {
+    background: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px var(--accent-secondary);
+}
+
+.play-btn:active {
+    transform: scale(0.95);
+}
+#guitar.guitar-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 100;
+    transform: none;
+    transform-origin: 50% 50%;
+    clip-path: circle(0% at 50% 50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* Instrument switcher (About right half) */
+.instrument-switcher {
+    width: 100%;
+    max-width: 520px;
+    min-height: 320px;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+}
+
+.instrument-switcher:active {
+    cursor: grabbing;
+}
+
+.instrument-display {
+    width: 90%;
+    height: 220px;
+}
+
+.instrument-label {
+    margin-top: 12px;
+    font-weight: bold;
+    color: var(--text-color);
+}

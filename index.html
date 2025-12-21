@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanyo's World | 孤独摇滚</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="loader">
+        <div class="loader-content">
+            <div class="counter">0%</div>
+            <div class="loader-text">BOCCHI LOADING...</div>
+        </div>
+    </div>
+
+    <canvas id="bg-canvas"></canvas>
+    
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+
+    <div id="smooth-wrapper">
+        <div id="smooth-content">
+            <header>
+                <div class="logo">KANYO</div>
+                <nav>
+                    <ul>
+                        <li><a href="#home" class="hover-trigger" data-text="主页">主页</a></li>
+                        <li><a href="#about" class="hover-trigger" data-text="关于我">关于我</a></li>
+                        <li><a href="#links" class="hover-trigger" data-text="友情链接">友情链接</a></li>
+                        <li><a href="#guitar" class="hover-trigger" data-text="吉他演奏">吉他演奏</a></li>
+                        <li><a href="#footer" class="hover-trigger" data-text="联系">联系</a></li>
+                    </ul>
+                </nav>
+            </header>
+
+            <section id="home" class="hero">
+                <div class="hero-content">
+                    <h1 class="hero-line-1">Kanyo's web</h1>
+                    <h1 class="hero-line-2">
+                        <span class="word-bocchi">Bocchi</span>
+                        <span class="word-and">and</span>
+                        <span class="word-rock">Rock</span>
+                    </h1>
+                    <p class="subtitle">这里是 Kanyo 的个人空间 🎸</p>
+                    <div class="scroll-indicator">
+                        <span>SCROLL</span>
+                        <div class="line"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="about" class="about-section">
+                <div class="about-container">
+                    <!-- Left Column: Rich Text -->
+                    <div class="about-left">
+                        <div class="section-title">
+                            <h2>01 // PROFILE</h2>
+                            <span class="jp-title">关于我</span>
+                        </div>
+                        <h3 class="bio-intro">
+                            CS Student & <br>
+                            <span class="highlight">Systems Enthusiast</span>
+                        </h3>
+                        <div class="bio-text">
+                            <p>热衷于计算机底层原理，沉迷于 0 和 1 的世界。正在阅读 <strong>CS:APP (深入理解计算机系统)</strong>，喜欢 C 语言、Linux 内核以及 GDB/PWNDBG 调试。</p>
+                            <p>偶尔也是个 MC 材质包作者，喜欢捣鼓各种奇怪的 Bug。当然，更是一个无可救药的二次元爱好者，社恐属性拉满。</p>
+                        </div>
+                        <div class="skills-list">
+                            <span class="skill-tag">#C/C++</span>
+                            <span class="skill-tag">#Linux Kernel</span>
+                            <span class="skill-tag">#Binary Exploitation</span>
+                            <span class="skill-tag">#Reverse Engineering</span>
+                            <span class="skill-tag">#Bocchi The Rock!</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Visual Collage -->
+                    <div class="about-right">
+                        <div class="char-card">
+                            <img src="assets/bocchi/bocchi0x0000.gif" alt="Bocchi Normal">
+                        </div>
+                        <div class="char-card">
+                            <img src="assets/bocchi/bocchi0x0005.gif" alt="Bocchi Panic">
+                        </div>
+                        <div class="char-card">
+                            <img src="assets/bocchi/bocchi0x000A.gif" alt="Bocchi Glitch">
+                        </div>
+                        <div class="char-card">
+                            <img src="assets/bocchi/bocchi0x000F.gif" alt="Bocchi Guitar">
+                        </div>
+                        
+                        <!-- Floating Badges -->
+                        <div class="floating-badge badge-1">SOCIAL ANXIETY</div>
+                        <div class="floating-badge badge-2">GUITAR HERO</div>
+                        <div class="floating-badge badge-3">KESSOKU BAND</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="links" class="works-section">
+                <div class="sticky-wrapper">
+                    <canvas id="tunnel-canvas"></canvas>
+                    
+                    <div class="container links-text-container">
+                        <div class="section-title">
+                            <h2>02 // FRIENDS</h2>
+                            <span class="jp-title">友情链接</span>
+                        </div>
+                    </div>
+
+                    <div class="zoom-wrapper">
+                        <div class="ring-container">
+                            <canvas id="guitar-body-canvas"></canvas>
+                            <div class="notes">
+                                <a href="terminal.html" class="note-link hover-trigger" data-index="0">
+                                    <img src="assets/headimg/my_bilibili_headimg.png" alt="Kanyo's Blog"/>
+                                    <span class="note-label">BLOG</span>
+                                </a>
+                                <a href="https://xxianxiayubanmian.github.io/" target="_blank" class="note-link hover-trigger" data-index="1">
+                                    <img src="assets/headimg/dahuan.jpg" alt="大欢老师"/>
+                                    <span class="note-label">PWN</span>
+                                </a>
+                                <a href="https://github.com/Kanyooooo" target="_blank" class="note-link hover-trigger" data-index="2">
+                                    <img src="assets/headimg/my_github_headimg.png" alt="Github"/>
+                                    <span class="note-label">GITHUB</span>
+                                </a>
+                                <a href="https://space.bilibili.com/151419774" target="_blank" class="note-link hover-trigger" data-index="3">
+                                    <img src="assets/headimg/my_bilibili_headimg.png" alt="Bilibili"/>
+                                    <span class="note-label">BILIBILI</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="guitar" class="guitar-section">
+                <div class="container">
+                    <div class="section-title">
+                        <h2>03 // JAM SESSION</h2>
+                        <span class="jp-title">吉他演奏</span>
+                    </div>
+                    <div class="guitar-container">
+                        <div class="guitar-controls">
+                            <div class="control-group">
+                                <label>Volume</label>
+                                <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
+                            </div>
+                            <div class="control-group">
+                                <label>Distortion</label>
+                                <input type="range" id="distortion" min="0" max="100" step="10" value="50">
+                            </div>
+                            <button id="play-twinkle" class="play-btn">Play Twinkle Twinkle</button>
+                            <div class="instruction">
+                                <p>点击指板或按键盘 <span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span><span class="key">G</span><span class="key">H</span> 演奏!</p>
+                            </div>
+                        </div>
+                        <div class="fretboard" id="fretboard">
+                            <!-- Strings and Frets will be generated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- New Gallery Section (Moved & Enhanced) -->
+            <section id="gallery" class="gallery-section">
+                <div class="gallery-sticky">
+                    <div class="parallax-stream">
+                        <!-- Layer 1: Background Text Wall (Full Content) -->
+                        <div class="layer layer-back-text">
+                            <div class="text-row">
+                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
+                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
+                            </div>
+                            <div class="text-row offset">
+                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
+                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
+                            </div>
+                            <div class="text-row">
+                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
+                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
+                            </div>
+                            <div class="text-row offset">
+                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
+                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
+                            </div>
+                             <div class="text-row">
+                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
+                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
+                            </div>
+                            <div class="text-row offset">
+                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
+                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
+                            </div>
+                        </div>
+
+                        <!-- Layer 2: Images (Mid Speed, Interleaved, 64 Images) -->
+                        <div class="layer layer-images">
+                            <!-- Batch 1 -->
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0000.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0001.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0002.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0003.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0004.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0005.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0006.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0007.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0008.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0009.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000A.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000B.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000C.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000D.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000E.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000F.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0010.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0011.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0012.gif" alt="Bocchi"></div>
+                            
+                            <!-- Batch 2 -->
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0000.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0003.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0006.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0009.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000C.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000F.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0012.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0001.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0004.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0007.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000A.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000D.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0010.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0002.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0005.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0008.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000B.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000E.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0011.gif" alt="Bocchi"></div>
+
+                            <!-- Batch 3 -->
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0005.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000A.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000F.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0004.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0009.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000E.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0003.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0008.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000D.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0002.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0007.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000C.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0001.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0006.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000B.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0000.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0010.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0011.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0012.gif" alt="Bocchi"></div>
+
+                             <!-- Batch 4 (Random Fill) -->
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0007.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0002.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000D.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0009.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0004.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000F.gif" alt="Bocchi"></div>
+                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000A.gif" alt="Bocchi"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- New Let's Rock Section (Wodniack Style) -->
+            <section id="lets-rock" class="rock-section">
+                <div class="rock-grid-bg"></div>
+                <div class="rock-circle hover-trigger">
+                    <div class="rock-text-container">
+                        <div class="rock-word">LET'S</div>
+                        <div class="rock-word">ROCK</div>
+                    </div>
+                    
+                    <!-- New Contact Content (Hidden by default, shown on hover) -->
+                    <div class="contact-content">
+                        <div class="contact-header">CONTACT ME</div>
+                        <div class="contact-sub">欢迎来博客或者 B 站找我玩！</div>
+                        <div class="contact-buttons">
+                            <a href="https://blog.kanyo.world" target="_blank" class="contact-btn"><span>BLOG</span></a>
+                            <a href="https://space.bilibili.com/393226330" target="_blank" class="contact-btn"><span>BILIBILI</span></a>
+                            <a href="mailto:contact@kanyo.world" class="contact-btn"><span>EMAIL</span></a>
+                        </div>
+                        <div class="contact-dots">
+                            <span class="dot pink"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot blue"></span>
+                            <span class="dot red"></span>
+                        </div>
+                    </div>
+
+                    <div class="rock-decor-star top-left"></div>
+                    <div class="rock-decor-star bottom-right"></div>
+                    <span class="rock-caption">KANYO.WORLD</span>
+                </div>
+                <!-- Secret Entry Point -->
+                <a href="secret.html" class="rock-footer-mark" style="text-decoration: none; cursor: help;" title="???">||||</a>
+            </section>
+            <footer id="footer">
+                <div class="container">
+                        <div class="copyright">
+                            <p>Worked by Kanyooooo</p>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>

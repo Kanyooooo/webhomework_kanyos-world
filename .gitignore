@@ -1,0 +1,18 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node (if you ever use it)
+node_modules/
+npm-debug.log
+
+# Trae related
+.trae/
+
+# Editor
+.vscode/
+.idea/
+
+# Junk
+选择其他浏览器。

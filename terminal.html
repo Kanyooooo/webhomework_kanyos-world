@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kanyo@bocchi-os: ~/blog</title>
+    <style>
+        :root {
+            --bg-color: #0d0d0d;
+            --term-green: #00FF00; /* Bright Neon Green */
+            --term-prompt: #FF00FF; /* Magenta */
+            --font-mono: 'Consolas', 'Courier New', monospace;
+        }
+
+        /* Split View Layout */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--term-green);
+            font-family: var(--font-mono);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: row; /* Horizontal Split */
+        }
+
+        /* Left Panel: Terminal */
+        .terminal-panel {
+            width: 50%;
+            height: 100%;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid var(--term-green);
+            position: relative;
+            background-color: #000; /* Force black background */
+            color: var(--term-green); /* Force Green Text */
+        }
+
+        .terminal {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            overflow-y: auto;
+            text-shadow: none;
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--term-green); /* Ensure child elements inherit */
+        }
+
+        /* Right Panel: Terminal Style Player */
+        .player-panel {
+            width: 50%;
+            height: 100%;
+            background: #000; /* Black background to match terminal */
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border-left: 2px solid var(--term-green);
+        }
+
+        /* ASCII Art / Wireframe Container */
+        .player-glass {
+            width: 360px;
+            height: 700px;
+            background: #000;
+            border-radius: 0; /* No round corners */
+            box-shadow: none;
+            border: 2px solid var(--term-green); /* Green outline */
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            color: var(--term-green); /* Green text */
+            position: relative;
+            font-family: var(--font-mono); /* Monospace font */
+            transition: transform 0.3s ease;
+        }
+        
+        /* Album Art - Wireframe Style */
+        .album-art {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #000;
+            border-radius: 0;
+            border: 2px solid var(--term-green);
+            box-shadow: 0 0 10px var(--term-green); /* Glow */
+            margin-bottom: 2rem;
+            overflow: hidden;
+            position: relative;
+            transition: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .album-art.playing {
+            transform: none;
+            box-shadow: 0 0 20px var(--term-green);
+        }
+        
+        .album-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
+            /* Removed complex filters since the image is already terminal style */
+            /* Optional: slight brightness boost if it's too dark */
+            filter: drop-shadow(0 0 5px var(--term-green)); 
+        }
+
+        /* Track Info */
+        .track-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px dashed var(--term-green);
+            padding-bottom: 1rem;
+        }
+
+        .track-text {
+            flex: 1;
+            padding-right: 1rem;
+        }
+
+        .track-title {
+            font-size: 1.2rem;
+            font-weight: normal;
+            margin-bottom: 0.5rem;
+            white-space: pre-wrap; /* Allow wrap */
+            text-transform: uppercase;
+        }
+
+        .track-artist {
+            font-size: 1rem;
+            color: var(--term-green);
+            opacity: 0.8;
+        }
+
+        .track-actions {
+            display: flex;
+            gap: 1rem;
+            color: var(--term-green);
+        }
+
+        /* Progress Bar - Reusing Range Style */
+        .progress-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 16px; /* Taller hit area */
+            background: transparent;
+            cursor: pointer;
+            margin: 0;
+        }
+        
+        .progress-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 4px; /* Thin line thumb */
+            background: var(--term-green);
+            border: none;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 5px var(--term-green);
+        }
+        
+        .progress-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(0, 255, 0, 0.2); /* Dim green track */
+            border: 1px solid var(--term-green);
+            border-radius: 0;
+        }
+        
+        .time-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--term-green);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .ctrl-btn {
+            background: #000;
+            border: 2px solid var(--term-green);
+            color: var(--term-green);
+            cursor: pointer;
+            transition: none;
+            padding: 5px;
+        }
+        
+        .ctrl-btn:hover {
+            background: var(--term-green);
+            color: #000;
+        }
+        
+        .ctrl-btn:active {
+            transform: translateY(2px);
+        }
+
+        .btn-play {
+            width: 60px;
+            height: 60px;
+            font-size: 2rem; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Volume (Bottom) */
+        .volume-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: auto;
+            color: var(--term-green);
+        }
+        
+        /* Input Range Styling for Terminal Look */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            background: #000;
+            border: 2px solid var(--term-green);
+            cursor: pointer;
+            margin-top: -6px; /* Align center */
+        }
+        
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: var(--term-green);
+            border-radius: 0;
+        }
+        
+        /* Visualizer (Background) */
+        .visualizer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px; /* Taller */
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px; /* Wider gap */
+            z-index: 0; /* Behind glass */
+            opacity: 0; /* Hidden by default */
+            pointer-events: none;
+            transition: opacity 0.5s ease; /* Smooth fade */
+        }
+
+        .visualizer.active {
+            opacity: 0.3; /* Subtle when active */
+        }
+
+        .bar {
+            width: 20px; /* Thicker bars */
+            background: var(--term-green);
+            transition: height 0.1s ease;
+            height: 5px;
+        }
+        
+        /* Ensure glass is above visualizer */
+        .player-glass {
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8); /* Slightly transparent to see bars behind? */
+            /* Or keep opaque black if you want bars only at bottom */
+            /* Let's make it opaque black as requested, bars will be at bottom of PANEL */
+            background: #000; 
+        }
+
+        /* Scanline Overlay for Player */
+        .player-panel::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Ensure all text elements inside terminal are green by default */
+        .terminal * {
+            color: var(--term-green);
+        }
+        
+        /* Specific overrides */
+        .prompt {
+            color: var(--term-prompt) !important;
+            font-weight: bold;
+        }
+        
+        .prompt-path {
+            color: var(--term-prompt) !important;
+        }
+        
+        /* Command input specifically */
+        .cmd-input {
+            color: var(--term-green) !important;
+            caret-color: var(--term-green);
+        }
+
+        .output {
+            color: var(--term-green);
+            white-space: pre-wrap;
+        }
+
+        /* Update cursor to block style */
+        /* Blinking Block Cursor for contenteditable */
+        .cmd-input {
+            outline: none;
+            display: inline-block;
+            min-width: 10px;
+        }
+        
+        /* Simulated block cursor via caret-color is tricky, using border-right trick */
+        .cmd-input:focus {
+             caret-color: var(--term-green);
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes type-on {
+            to { opacity: 1; }
+        }
+
+        a {
+            color: #fff;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        
+        a:hover {
+            background: var(--term-green);
+            color: #000;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: var(--term-green); border-radius: 5px; }
+
+    </style>
+</head>
+<body class="crt">
+    <!-- Hidden Audio Element (Moved to top for JS access) -->
+    <!-- Removed crossOrigin="anonymous" to fix local playback "No supported sources" error -->
+    <audio id="bgm" loop>
+        <source src="" type="audio/mp3">
+    </audio>
+
+    <!-- Left Panel: Terminal -->
+    <div class="terminal-panel">
+        <div class="terminal" id="term">
+            <!-- JS will populate this -->
+        </div>
+    </div>
+
+    <!-- Right Panel: Player -->
+    <div class="player-panel">
+        <!-- Visualizer Container (Moved inside player-panel, behind player-glass) -->
+        <div class="visualizer" id="visualizer">
+            <!-- Bars generated by JS -->
+        </div>
+
+        <div class="player-glass" id="player-ui">
+            <!-- Top Bar -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; font-size: 0.8rem; font-weight: bold;">
+                <span id="clock">12:00</span>
+                <span>BOCCHI 5G</span>
+            </div>
+
+            <!-- Album Art -->
+            <div class="album-art" id="album-art-container">
+                <img id="cover-img" src="assets/music/image.png" alt="Album Art">
+            </div>
+
+            <!-- Track Info -->
+            <div class="track-info">
+                <div class="track-text">
+                    <div class="track-title" id="track-title">Not Playing</div>
+                    <div class="track-artist" id="track-artist">System Idle</div>
+                </div>
+                <div class="track-actions">
+                    <span>★</span>
+                    <span>•••</span>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-container">
+                <!-- Replaced custom div with input range for dragging support -->
+                <input type="range" class="progress-slider" id="progress-slider" min="0" max="100" value="0" step="0.1" oninput="onSeekInput(this.value)" onchange="onSeekChange(this.value)">
+                <div class="time-labels">
+                    <span id="curr-time">0:00</span>
+                    <span id="total-time">-0:00</span>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="ctrl-btn" onclick="playPrev()">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                </button>
+                <button class="ctrl-btn btn-play" id="play-btn" onclick="togglePlay()">
+                    <!-- Play Icon -->
+                    <svg id="icon-play" width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    <!-- Pause Icon (Hidden) -->
+                    <svg id="icon-pause" width="40" height="40" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                <button class="ctrl-btn" onclick="playNext()">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                </button>
+            </div>
+
+            <!-- Volume -->
+            <div class="volume-section">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                <input type="range" class="vol-slider" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </div>
+            <!-- Visualizer Container -->
+            <!-- Removed from inside player-glass -->
+        </div>
+    </div>
+
+    <script>
+        const fileSystem = [
+            { name: "about_me.txt", type: "text", content: "NAME: Kanyo\nROLE: System Architect / Guitarist\nSTATUS: Social Battery 0%\n\nI break things to see how they work. Sometimes I fix them." },
+            { name: "music_player.exe", type: "exec", action: "playMusic" },
+            { name: "return_home.sh", type: "exec", action: "goHome" }
+        ];
+
+        // Music Library - Real Files (Updated)
+        const musicLibrary = [
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 1.青春コンプレックス (青春症候群)(Av559996788,P1).mp3", alias: "01.Youth_Complex.mp3", title: "青春コンプレックス", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 2.ひとりぼっち東京 (孤独东京)(Av559996788,P2).mp3", alias: "02.Lonely_Tokyo.mp3", title: "ひとりぼっち東京", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 3.Distortion!! (失真!!)(Av559996788,P3).mp3", alias: "03.Distortion.mp3", title: "Distortion!!", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 4.ひみつ基地（秘密基地）(Av559996788,P4).mp3", alias: "04.Secret_Base.mp3", title: "ひみつ基地", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 5.ギターと孤独と蒼い惑星 (吉他与孤独与蓝色星球)(Av559996788,P5).mp3", alias: "05.Guitar_Loneliness.mp3", title: "ギターと孤独と蒼い惑星", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 6.ラブソングが歌えない（不会唱情歌）(Av559996788,P6).mp3", alias: "06.Cant_Sing_Love_Songs.mp3", title: "ラブソングが歌えない", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 7.あのバンド（那个乐队）(Av559996788,P7).mp3", alias: "07.That_Band.mp3", title: "あのバンド", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 8.カラカラ (空无一物)(Av559996788,P8).mp3", alias: "08.Karakara.mp3", title: "カラカラ", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 9.小さな海（小小的海）(Av559996788,P9).mp3", alias: "09.The_Little_Sea.mp3", title: "小さな海", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 10.なにが悪い（有什么不好）(Av559996788,P10).mp3", alias: "10.What_Is_Wrong.mp3", title: "なにが悪い", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 11.忘れてやらない（不要忘记）(Av559996788,P11).mp3", alias: "11.Never_Forget.mp3", title: "忘れてやらない", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 12.星座になれたら（若能化作星座）(Av559996788,P12).mp3", alias: "12.Constellation.mp3", title: "星座になれたら", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 13.フラッシュバッカー（往日重现）(Av559996788,P13).mp3", alias: "13.Flashbacker.mp3", title: "フラッシュバッカー", artist: "Kessoku Band" },
+            { file: "【中日字幕】孤独摇滚 歌曲27首 全部收录 - 14.転がる岩、君に朝が降る（滚动的岩石，向你降下清晨）(Av559996788,P14).mp3", alias: "14.RocknRoll_Morning.mp3", title: "転がる岩、君に朝が降る", artist: "Kessoku Band" }
+        ];
+
+        let currentTrackIndex = -1;
+        
+        // UI Helpers
+        const updatePlayerUI = (track, isPlaying) => {
+            document.getElementById('track-title').innerText = track ? track.title : "Not Playing";
+            document.getElementById('track-artist').innerText = track ? track.artist : "System Idle";
+            
+            // Toggle Icons
+            const iconPlay = document.getElementById('icon-play');
+            const iconPause = document.getElementById('icon-pause');
+            if (isPlaying) {
+                if(iconPlay) iconPlay.style.display = 'none';
+                if(iconPause) iconPause.style.display = 'block';
+                const art = document.querySelector('.album-art');
+                if(art) art.classList.add('playing');
+                const glass = document.querySelector('.player-glass');
+                if(glass) glass.classList.add('terminal-active');
+            } else {
+                if(iconPlay) iconPlay.style.display = 'block';
+                if(iconPause) iconPause.style.display = 'none';
+                const art = document.querySelector('.album-art');
+                if(art) art.classList.remove('playing');
+                const glass = document.querySelector('.player-glass');
+                if(glass) glass.classList.remove('terminal-active');
+            }
+            
+            // Random Album Art (Mockup)
+            // Use the provided single image for now
+            const coverImg = document.getElementById('cover-img');
+            if (coverImg) coverImg.src = "assets/music/image.png"; 
+        };
+
+        const formatTime = (seconds) => {
+            if (isNaN(seconds)) return "0:00";
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60);
+            return `${min}:${sec < 10 ? '0' + sec : sec}`;
+        };
+
+        // Audio Events
+        const audio = document.getElementById('bgm');
+        
+        let isSeeking = false;
+
+        audio.addEventListener('timeupdate', () => {
+            if (!isSeeking) {
+                const progress = (audio.currentTime / audio.duration) * 100 || 0;
+                const slider = document.getElementById('progress-slider');
+                if (slider) slider.value = progress;
+                
+                const currTime = document.getElementById('curr-time');
+                if (currTime) currTime.innerText = formatTime(audio.currentTime);
+                
+                const totalTime = document.getElementById('total-time');
+                if (totalTime) totalTime.innerText = `-${formatTime(audio.duration - audio.currentTime)}`;
+            }
+        });
+
+        // Seek Control - Dragging
+        window.onSeekInput = (val) => {
+            isSeeking = true;
+            // Update time display while dragging
+            if(audio.duration) {
+                const time = (val / 100) * audio.duration;
+                const currTime = document.getElementById('curr-time');
+                if (currTime) currTime.innerText = formatTime(time);
+            }
+        };
+
+        window.onSeekChange = (val) => {
+            isSeeking = false;
+            if(audio.duration) {
+                audio.currentTime = (val / 100) * audio.duration;
+            }
+        };
+        
+        audio.addEventListener('ended', () => {
+             playNext();
+        });
+
+        // Global Player Controls
+        window.playTrack = async (index) => {
+            await initAudioContext(); // Ensure audio context is ready
+            if (index < 0 || index >= musicLibrary.length) return;
+            currentTrackIndex = index;
+            const track = musicLibrary[index];
+            
+            const src = `assets/music/${encodeURIComponent(track.file)}`;
+            // Prevent redundant reloading if src is same? 
+            // Actually for restart we might want reload. 
+            // But let's check if we can just set src directly.
+            audio.src = src;
+            
+            try {
+                await audio.play();
+                updatePlayerUI(track, true);
+                return track;
+            } catch (e) {
+                console.error(e);
+                // Fallback: if play fails, maybe interaction needed
+                typeLine(`<span class="output" style="color:#ff5555">Playback Error: ${e.message}</span>`);
+                return null;
+            }
+        };
+
+        window.togglePlay = async () => {
+            await initAudioContext(); // Ensure audio context is ready
+            if (audio.paused) {
+                if (currentTrackIndex === -1) window.playTrack(0); // Play first if nothing
+                else audio.play();
+                updatePlayerUI(musicLibrary[currentTrackIndex], true);
+            } else {
+                audio.pause();
+                updatePlayerUI(musicLibrary[currentTrackIndex], false);
+            }
+        };
+
+        window.playNext = () => {
+            let next = currentTrackIndex + 1;
+            if (next >= musicLibrary.length) next = 0;
+            // Sync with terminal if needed, but for now just play
+            window.playTrack(next);
+            // Optional: Print to terminal
+            typeLine(`<span class="output" style="color:#bd93f9">>> Skipping to: ${musicLibrary[next].alias}</span>`);
+        };
+
+        window.playPrev = () => {
+            let prev = currentTrackIndex - 1;
+            if (prev < 0) prev = musicLibrary.length - 1;
+            window.playTrack(prev);
+            typeLine(`<span class="output" style="color:#bd93f9">>> Skipping to: ${musicLibrary[prev].alias}</span>`);
+        };
+
+        // Audio Context & Analyser
+        let audioCtx;
+        let analyser;
+        let dataArray;
+        let source;
+        let useFakeVisualizer = false;
+
+        async function initAudioContext() {
+            // If running locally (file://), Web Audio API often mutes the audio due to CORS/Security.
+            // In this case, we fallback to a "Fake" visualizer to ensure audio plays.
+            if (window.location.protocol === 'file:') {
+                console.warn("Running locally (file://). Disabling Web Audio API to prevent silence. Using simulation mode.");
+                useFakeVisualizer = true;
+                return;
+            }
+
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 64; 
+                    
+                    if(!source) {
+                        source = audioCtx.createMediaElementSource(audio);
+                        source.connect(analyser);
+                        analyser.connect(audioCtx.destination);
+                    }
+                    
+                    const bufferLength = analyser.frequencyBinCount;
+                    dataArray = new Uint8Array(bufferLength);
+                } catch (e) {
+                    console.error("Audio Context Init Failed:", e);
+                    useFakeVisualizer = true;
+                }
+            }
+            
+            if (audioCtx && audioCtx.state === 'suspended') {
+                try {
+                    await audioCtx.resume();
+                } catch (e) {
+                    console.warn("AudioContext resume failed:", e);
+                }
+            }
+        }
+
+        // Initialize Visualizer Bars
+        const visualizer = document.getElementById('visualizer');
+        // fftSize 64 gives 32 bins
+        const barCount = 32; 
+        if(visualizer) {
+            for(let i=0; i<barCount; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = '5px'; // Default low height
+                visualizer.appendChild(bar);
+            }
+        }
+
+        // Real Visualizer Loop (with Fallback)
+        function updateVisualizer() {
+            const visContainer = document.getElementById('visualizer');
+            const bars = document.querySelectorAll('.bar');
+            
+            if(!audio.paused) {
+                if(visContainer) visContainer.classList.add('active');
+                
+                if (useFakeVisualizer || !analyser) {
+                    // Simulation Mode (Random but synced-ish)
+                    bars.forEach((bar, index) => {
+                         // Create a wave-like pattern + random noise
+                         const time = Date.now() / 100;
+                         const wave = Math.sin(index * 0.5 + time) * 20 + 20;
+                         const noise = Math.random() * 60;
+                         const h = wave + noise + 10;
+                         bar.style.height = h + 'px';
+                    });
+                } else {
+                    // Real FFT Mode
+                    analyser.getByteFrequencyData(dataArray);
+                    bars.forEach((bar, index) => {
+                        const value = dataArray[index] || 0;
+                        const h = (value / 255) * 140 + 5; 
+                        bar.style.height = h + 'px';
+                    });
+                }
+            } else {
+                if(visContainer) visContainer.classList.remove('active');
+                // Drop to zero immediately on pause
+                bars.forEach(bar => {
+                    bar.style.height = '5px';
+                });
+            }
+            requestAnimationFrame(updateVisualizer);
+        }
+        updateVisualizer();
+
+        // Volume Control
+        window.setVolume = (val) => {
+            audio.volume = val;
+        };
+        
+        /* ... existing code ... */
+
+        // Clock
+        setInterval(() => {
+            const now = new Date();
+            const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('clock').innerText = time;
+        }, 1000);
+
+        let inputBuffer = "";
+        let isInputActive = false;
+        let currentPath = "~"; // Simple path simulation
+        
+        // Define delay helper properly in global scope
+        const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+        // Sound effect (optional, simplified beep)
+        const beep = () => {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 800;
+            gain.gain.value = 0.1;
+            osc.start();
+            osc.stop(ctx.currentTime + 0.05);
+        };
+
+        async function typeLine(html, speed = 10) {
+            const div = document.createElement('div');
+            div.className = 'line';
+            div.innerHTML = html;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+            
+            // "Type" effect simply by revealing (animation handled by CSS, but we can pause)
+            await delay(speed); 
+        }
+
+        async function createInputLine() {
+            const div = document.createElement('div');
+            div.className = 'line input-line';
+            // ZSH Style: Prompt colored differently
+            div.innerHTML = `<span class="prompt">kanyo@bocchi-os:<span class="prompt-path">${currentPath}</span>$</span> <span class="cmd-input" contenteditable="true" spellcheck="false"></span>`;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+            isInputActive = true;
+            inputBuffer = "";
+            
+            // Focus on the input span
+            setTimeout(() => {
+                const inputSpan = div.querySelector('.cmd-input');
+                if(inputSpan) {
+                    inputSpan.focus();
+                }
+            }, 10);
+        }
+
+        // Event Listener for Typing
+        // Now handling contenteditable
+        document.addEventListener('keydown', (e) => {
+             if (!isInputActive) return;
+             
+             const inputSpan = document.querySelector('.input-line:last-child .cmd-input');
+             if (!inputSpan) return;
+
+             // Keep focus
+             inputSpan.focus();
+
+             if (e.key === "Enter") {
+                 e.preventDefault(); // Prevent new line in contenteditable
+                 const cmd = inputSpan.innerText; // Get text from span
+                 // Freeze input
+                 inputSpan.setAttribute('contenteditable', 'false');
+                 handleCommand(cmd);
+             } 
+             // Allow Tab completion (Basic stub)
+             else if (e.key === "Tab") {
+                 e.preventDefault();
+                 // TODO: Implement tab completion if needed
+             }
+        });
+        
+        async function handleCommand(cmd) {
+            isInputActive = false;
+            // Freeze current input line
+            const activeInput = document.querySelector('.input-line:last-child .cmd-input');
+            if(activeInput) activeInput.setAttribute('contenteditable', 'false');
+
+            // Simple parser
+            const args = cmd.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+            const cleanArgs = args.map(arg => arg.replace(/^"|"$/g, ''));
+            const command = cleanArgs[0] ? cleanArgs[0].toLowerCase() : "";
+
+            if (command === "ls") {
+                if (currentPath === "~") {
+                    await typeLine(`<span class="output">total 4 files</span>`);
+                    await typeLine(`<span class="output" style="color:#8be9fd">music/</span>`); // Directory
+                    for (let file of fileSystem) {
+                        let color = file.type === "exec" ? "#ff5555" : "#f1fa8c";
+                        await typeLine(`<span class="output" style="color:${color}">${file.name}</span>`);
+                    }
+                } else if (currentPath === "~/music") {
+                    await typeLine(`<span class="output">total ${musicLibrary.length} files</span>`);
+                    for (let track of musicLibrary) {
+                        await typeLine(`<span class="output" style="color:#bd93f9">${track.alias}</span>`);
+                    }
+                }
+            } 
+            else if (command === "cd") {
+                const target = cleanArgs[1];
+                if (!target || target === "~") {
+                    currentPath = "~";
+                } else if (target === "music" && currentPath === "~") {
+                    currentPath = "~/music";
+                } else if (target === ".." && currentPath === "~/music") {
+                    currentPath = "~";
+                } else {
+                    await typeLine(`<span class="output">cd: ${target}: No such file or directory</span>`);
+                }
+            }
+            else if (command === "play") {
+                let songName = cleanArgs[1];
+                if (!songName) {
+                    await typeLine(`<span class="output">Usage: play [filename]</span>`);
+                } else {
+                    let track = null;
+                    track = musicLibrary.find(t => t.alias.toLowerCase() === songName.toLowerCase());
+                    if (!track) {
+                        track = musicLibrary.find(t => t.alias.toLowerCase().startsWith(songName.toLowerCase()));
+                    }
+
+                    if (track) {
+                        const audio = document.getElementById('bgm');
+                        const src = `assets/music/${encodeURIComponent(track.file)}`;
+                        audio.src = src;
+                        
+                        await typeLine(`<span class="output">>> LOADING TRACK... [||||||||||] 100%</span>`);
+                        await typeLine(`<span class="output" style="color:#50fa7b">>> NOW PLAYING: ${track.alias}</span>`);
+                        
+                        // Sync with UI
+                        const trackIndex = musicLibrary.indexOf(track);
+                        currentTrackIndex = trackIndex;
+                        updatePlayerUI(track, true);
+
+                        // Ensure Audio Context
+                        await initAudioContext();
+
+                        audio.play().catch(e => {
+                            typeLine(`<span class="output" style="color:#ff5555">Error: ${e.message}</span>`);
+                        });
+                    } else {
+                         await typeLine(`<span class="output">play: ${songName}: Track not found in library</span>`);
+                    }
+                }
+            }
+            else if (command === "stop") {
+                 const audio = document.getElementById('bgm');
+                 audio.pause();
+                 if(currentTrackIndex !== -1) {
+                    updatePlayerUI(musicLibrary[currentTrackIndex], false); // Sync UI
+                 }
+                 await typeLine(`<span class="output">>> PLAYBACK STOPPED</span>`);
+            }
+            else if (command === "cat") {
+                if (!cleanArgs[1]) {
+                    await typeLine(`<span class="output">Usage: cat [filename]</span>`);
+                } else {
+                    const file = fileSystem.find(f => f.name === cleanArgs[1]);
+                    if (!file) {
+                        await typeLine(`<span class="output">cat: ${cleanArgs[1]}: No such file or directory</span>`);
+                    } else if (file.type === "text") {
+                        await typeLine(`<span class="output">${file.content}</span>`);
+                    } else {
+                        await typeLine(`<span class="output">cat: ${cleanArgs[1]}: Binary file (try executing it)</span>`);
+                    }
+                }
+            }
+            else if (command.startsWith("./")) {
+                const fileName = command.replace("./", "");
+                const file = fileSystem.find(f => f.name === fileName);
+                
+                if (file) {
+                    if (file.action === "playMusic") {
+                         await typeLine(`<span class="output">>> Music Player v1.0 running...</span>`);
+                         await typeLine(`<span class="output">>> Hint: 'cd music' then 'ls' to see tracks. 'play [trackname]' to listen.</span>`);
+                    } else if (file.action === "goHome") {
+                        await typeLine(`<span class="output">>> LOGGING OUT...</span>`);
+                        await delay(500);
+                        window.location.href = "index.html";
+                    }
+                } else {
+                    await typeLine(`<span class="output">bash: ${command}: command not found</span>`);
+                }
+            }
+            else if (command === "clear") {
+                term.innerHTML = "";
+            }
+            else if (command === "help") {
+                await typeLine(`<span class="output">Available commands: ls, cd, cat, play, stop, clear, ./[executable]</span>`);
+            }
+            else if (command === "") {
+                // do nothing
+            }
+            else {
+                await typeLine(`<span class="output">bash: ${command}: command not found</span>`);
+            }
+
+            createInputLine();
+        }
+
+
+        // Init
+        (async () => {
+            await typeLine(`<span class="prompt">kanyo@bocchi-os:~$</span> <span class="output">System initialized.</span>`);
+            await typeLine(`<span class="output">Type 'ls' to view files.</span>`);
+            createInputLine();
+        })();
+
+
+    </script>
+    
+    <!-- Placeholder Audio Element (Removed from bottom) -->
