@@ -1,11 +1,11 @@
 {
     "version":  1,
-    "generatedAt":  "2026-06-09T11:30:45.9110891Z",
+    "generatedAt":  "2026-06-10T01:31:01.2337493Z",
     "source":  {
                    "vault":  "note-vault",
                    "remote":  "https://github.com/Kanyooooo/note-vault.git",
                    "branch":  "master",
-                   "commit":  "cc5fdf8",
+                   "commit":  "501fb78",
                    "dirty":  false,
                    "includedFolders":  [
                                            "0x00",
@@ -21,7 +21,7 @@
              },
     "stats":  {
                   "posts":  198,
-                  "skipped":  64,
+                  "skipped":  65,
                   "copiedAssets":  903
               },
     "categories":  [
