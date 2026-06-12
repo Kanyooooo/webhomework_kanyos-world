@@ -1,6 +1,6 @@
 {
     "version":  1,
-    "generatedAt":  "2026-06-12T05:00:31.7892934Z",
+    "generatedAt":  "2026-06-12T06:00:58.4613728Z",
     "source":  {
                    "vault":  "note-vault",
                    "remote":  "https://github.com/Kanyooooo/note-vault.git",
@@ -21,7 +21,7 @@
              },
     "stats":  {
                   "posts":  199,
-                  "skipped":  66,
+                  "skipped":  52,
                   "copiedAssets":  903
               },
     "categories":  [
