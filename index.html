@@ -3,319 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kanyo's World | 孤独摇滚</title>
+    <meta name="description" content="Kanyo 的像素 CTF 个人主页，融合 Obys 式文本节奏、Google CTF 像素 UI 与孤独摇滚。">
+    <title>Kanyo Restricted Zone</title>
     <link rel="stylesheet" href="style.css">
+    <script defer src="vendor/gsap.min.js"></script>
+    <script defer src="vendor/ScrollTrigger.min.js"></script>
+    <script defer src="vendor/lenis.min.js"></script>
+    <script defer src="main.js"></script>
 </head>
 <body>
-    <div id="loader">
-        <div class="loader-content">
-            <div class="counter">0%</div>
-            <div class="loader-text">BOCCHI LOADING...</div>
+    <div class="paper-noise" aria-hidden="true"></div>
+    <div class="scanline" aria-hidden="true"></div>
+    <div class="progress" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <div class="flag-mark" aria-hidden="true">
+            <span></span>
         </div>
-    </div>
-
-    <canvas id="bg-canvas"></canvas>
-    
-    <div id="cursor"></div>
-    <div id="cursor-follower"></div>
-
-    <div id="smooth-wrapper">
-        <div id="smooth-content">
-            <header>
-                <div class="logo">KANYO</div>
-                <nav>
-                    <ul>
-                        <li><a href="#home" class="hover-trigger" data-text="主页">主页</a></li>
-                        <li><a href="#about" class="hover-trigger" data-text="关于我">关于我</a></li>
-                        <li><a href="#links" class="hover-trigger" data-text="友情链接">友情链接</a></li>
-                        <li><a href="#guitar" class="hover-trigger" data-text="吉他演奏">吉他演奏</a></li>
-                        <li><a href="#footer" class="hover-trigger" data-text="联系">联系</a></li>
-                    </ul>
-                </nav>
-            </header>
-
-            <section id="home" class="hero">
-                <div class="hero-content">
-                    <h1 class="hero-line-1">Kanyo's web</h1>
-                    <h1 class="hero-line-2">
-                        <span class="word-bocchi">Bocchi</span>
-                        <span class="word-and">the>t'he>t
-                        <span class="word-rock">Rock</span>
-                    </h1>
-                    <p class="subtitle">这里是 Kanyo 的个人空间 🎸</p>
-                    <div class="scroll-indicator">
-                        <span>SCROLL</span>
-                        <div class="line"></div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="about" class="about-section">
-                <div class="about-container">
-                    <!-- Left Column: Rich Text -->
-                    <div class="about-left">
-                        <div class="section-title">
-                            <h2>01 // PROFILE</h2>
-                            <span class="jp-title">关于我</span>
-                        </div>
-                        <h3 class="bio-intro">
-                            CS Student & <br>
-                            <span class="highlight">Systems Enthusiast</span>
-                        </h3>
-                        <div class="bio-text">
-                            <p>热衷于计算机底层原理，沉迷于 0 和 1 的世界。正在阅读 <strong>CS:APP (深入理解计算机系统)</strong>，喜欢 C 语言、Linux 内核以及 GDB/PWNDBG 调试。</p>
-                            <p>偶尔也是个 MC 材质包作者，喜欢捣鼓各种奇怪的 Bug。当然，更是一个无可救药的二次元爱好者，社恐属性拉满。</p>
-                        </div>
-                        <div class="skills-list">
-                            <span class="skill-tag">#C/C++</span>
-                            <span class="skill-tag">#Linux Kernel</span>
-                            <span class="skill-tag">#Binary Exploitation</span>
-                            <span class="skill-tag">#Reverse Engineering</span>
-                            <span class="skill-tag">#Bocchi The Rock!</span>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Visual Collage -->
-                    <div class="about-right">
-                        <div class="char-card">
-                            <img src="assets/bocchi/bocchi0x0000.gif" alt="Bocchi Normal">
-                        </div>
-                        <div class="char-card">
-                            <img src="assets/bocchi/bocchi0x0005.gif" alt="Bocchi Panic">
-                        </div>
-                        <div class="char-card">
-                            <img src="assets/bocchi/bocchi0x000A.gif" alt="Bocchi Glitch">
-                        </div>
-                        <div class="char-card">
-                            <img src="assets/bocchi/bocchi0x000F.gif" alt="Bocchi Guitar">
-                        </div>
-                        
-                        <!-- Floating Badges -->
-                        <div class="floating-badge badge-1">SOCIAL ANXIETY</div>
-                        <div class="floating-badge badge-2">GUITAR HERO</div>
-                        <div class="floating-badge badge-3">KESSOKU BAND</div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="links" class="works-section">
-                <div class="sticky-wrapper">
-                    <canvas id="tunnel-canvas"></canvas>
-                    
-                    <div class="container links-text-container">
-                        <div class="section-title">
-                            <h2>02 // FRIENDS</h2>
-                            <span class="jp-title">友情链接</span>
-                        </div>
-                    </div>
-
-                    <div class="zoom-wrapper">
-                        <div class="ring-container">
-                            <canvas id="guitar-body-canvas"></canvas>
-                            <div class="notes">
-                                <a href="terminal.html" class="note-link hover-trigger" data-index="0">
-                                    <img src="assets/headimg/my_bilibili_headimg.png" alt="Kanyo's Blog"/>
-                                    <span class="note-label">BLOG</span>
-                                </a>
-                                <a href="https://xxianxiayubanmian.github.io/" target="_blank" class="note-link hover-trigger" data-index="1">
-                                    <img src="assets/headimg/dahuan.jpg" alt="大欢老师"/>
-                                    <span class="note-label">PWN</span>
-                                </a>
-                                <a href="https://github.com/Kanyooooo" target="_blank" class="note-link hover-trigger" data-index="2">
-                                    <img src="assets/headimg/my_github_headimg.png" alt="Github"/>
-                                    <span class="note-label">GITHUB</span>
-                                </a>
-                                <a href="https://space.bilibili.com/151419774" target="_blank" class="note-link hover-trigger" data-index="3">
-                                    <img src="assets/headimg/my_bilibili_headimg.png" alt="Bilibili"/>
-                                    <span class="note-label">BILIBILI</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="guitar" class="guitar-section">
-                <div class="container">
-                    <div class="section-title">
-                        <h2>03 // JAM SESSION</h2>
-                        <span class="jp-title">吉他演奏</span>
-                    </div>
-                    <div class="guitar-container">
-                        <div class="guitar-controls">
-                            <div class="control-group">
-                                <label>Volume</label>
-                                <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
-                            </div>
-                            <div class="control-group">
-                                <label>Distortion</label>
-                                <input type="range" id="distortion" min="0" max="100" step="10" value="50">
-                            </div>
-                            <button id="play-twinkle" class="play-btn">Play Twinkle Twinkle</button>
-                            <div class="instruction">
-                                <p>点击指板或按键盘 <span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span><span class="key">G</span><span class="key">H</span> 演奏!</p>
-                            </div>
-                        </div>
-                        <div class="fretboard" id="fretboard">
-                            <!-- Strings and Frets will be generated by JS -->
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- New Gallery Section (Moved & Enhanced) -->
-            <section id="gallery" class="gallery-section">
-                <div class="gallery-sticky">
-                    <div class="parallax-stream">
-                        <!-- Layer 1: Background Text Wall (Full Content) -->
-                        <div class="layer layer-back-text">
-                            <div class="text-row">
-                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
-                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
-                            </div>
-                            <div class="text-row offset">
-                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
-                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
-                            </div>
-                            <div class="text-row">
-                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
-                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
-                            </div>
-                            <div class="text-row offset">
-                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
-                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
-                            </div>
-                             <div class="text-row">
-                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
-                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
-                            </div>
-                            <div class="text-row offset">
-                                <span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span>
-                                <span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span><span class="rock">ROCK</span><span class="bocchi">BOCCHI</span>
-                            </div>
-                        </div>
-
-                        <!-- Layer 2: Images (Mid Speed, Interleaved, 64 Images) -->
-                        <div class="layer layer-images">
-                            <!-- Batch 1 -->
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0000.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0001.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0002.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0003.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0004.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0005.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0006.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0007.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0008.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0009.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000A.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000B.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000C.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000D.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000E.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000F.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0010.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0011.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0012.gif" alt="Bocchi"></div>
-                            
-                            <!-- Batch 2 -->
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0000.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0003.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0006.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0009.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000C.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000F.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0012.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0001.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0004.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0007.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000A.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000D.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0010.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0002.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0005.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0008.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000B.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000E.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0011.gif" alt="Bocchi"></div>
-
-                            <!-- Batch 3 -->
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0005.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000A.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000F.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0004.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0009.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000E.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0003.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0008.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000D.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0002.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0007.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000C.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0001.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0006.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000B.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0000.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0010.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0011.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0012.gif" alt="Bocchi"></div>
-
-                             <!-- Batch 4 (Random Fill) -->
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0007.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0002.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000D.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0009.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x0004.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000F.gif" alt="Bocchi"></div>
-                            <div class="gallery-item"><img src="assets/bocchi/bocchi0x000A.gif" alt="Bocchi"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- New Let's Rock Section (Wodniack Style) -->
-            <section id="lets-rock" class="rock-section">
-                <div class="rock-grid-bg"></div>
-                <div class="rock-circle hover-trigger">
-                    <div class="rock-text-container">
-                        <div class="rock-word">LET'S</div>
-                        <div class="rock-word">ROCK</div>
-                    </div>
-                    
-                    <!-- New Contact Content (Hidden by default, shown on hover) -->
-                    <div class="contact-content">
-                        <div class="contact-header">CONTACT ME</div>
-                        <div class="contact-sub">欢迎来博客或者 B 站找我玩！</div>
-                        <div class="contact-buttons">
-                            <a href="https://blog.kanyo.world" target="_blank" class="contact-btn"><span>BLOG</span></a>
-                            <a href="https://space.bilibili.com/393226330" target="_blank" class="contact-btn"><span>BILIBILI</span></a>
-                            <a href="mailto:contact@kanyo.world" class="contact-btn"><span>EMAIL</span></a>
-                        </div>
-                        <div class="contact-dots">
-                            <span class="dot pink"></span>
-                            <span class="dot yellow"></span>
-                            <span class="dot blue"></span>
-                            <span class="dot red"></span>
-                        </div>
-                    </div>
-
-                    <div class="rock-decor-star top-left"></div>
-                    <div class="rock-decor-star bottom-right"></div>
-                    <span class="rock-caption">KANYO.WORLD</span>
-                </div>
-                <!-- Secret Entry Point -->
-                <a href="secret.html" class="rock-footer-mark" style="text-decoration: none; cursor: help;" title="???">||||</a>
-            </section>
-            <footer id="footer">
-                <div class="container">
-                        <div class="copyright">
-                            <p>Worked by Kanyooooo</p>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+        <div class="login-state">[ Not logged in ]</div>
+        <nav aria-label="主导航">
+            <a href="#zone">Zone</a>
+            <a href="#lab">GAME</a>
+            <a href="#works">Adventure</a>
+            <a href="blog.html">Blog</a>
+            <a href="#links">Links</a>
+        </nav>
+        <div class="mode-box">
+            <span>MODE</span>
+            <strong>ACTIVE</strong>
         </div>
-    </div>
-    <script src="main.js"></script>
+    </header>
+
+    <main id="top">
+        <section class="hero" id="zone">
+            <div class="terminal-lines">
+                <p>&gt; Greetings</p>
+                <p>&gt; guitar loneliness detected</p>
+                <p>&gt; pwn note: never trust size_t</p>
+            </div>
+
+            <div class="pixel-cluster cluster-a" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <div class="pixel-cluster cluster-b" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i>
+            </div>
+
+            <div class="hero-title-wrap">
+                <div class="tiny-flag" aria-hidden="true"></div>
+                <h1 class="pixel-title" data-split>Kanyo<br>Restricted<br>Zone</h1>
+                <div class="hero-actions">
+                    <a href="#lab">-&gt;Enter Gate</a>
+                    <a href="terminal.html">Terminal</a>
+                    <a href="https://github.com/Kanyooooo" target="_blank" rel="noreferrer">GitHub</a>
+                </div>
+            </div>
+
+            <aside class="right-menu">
+                <a href="#lab">GAME</a>
+                <a href="#works">Adventure</a>
+                <a href="#links">Contact</a>
+            </aside>
+
+            <div class="vertical-label label-left">Scoreboard</div>
+            <div class="vertical-label label-right">Challenges</div>
+        </section>
+
+        <section class="statement">
+            <div class="number">01</div>
+            <h2 data-split>我的人生就是一个巨大的栈溢出，谁又他妈的把我的返回地址改到火星去了？？？</h2>
+            <p>吉他、PWN、粉色社恐，还有一个会掉 flag 的网页。</p>
+        </section>
+
+        <section id="lab" class="game-zone lab-game" data-game-state="playing">
+            <div class="game-head">
+                <div class="number">02</div>
+                <div>
+                    <p class="kicker">GAME // 100000 CANDY GATE</p>
+                    <h2 data-split>吃到十万颗？不如直接改代码。</h2>
+                </div>
+            </div>
+
+            <div class="game-shell">
+                <aside class="quest-rail" aria-label="challenge progress">
+                    <div class="quest-chip is-active" data-step-dot>01</div>
+                    <div class="quest-chip" data-step-dot>02</div>
+                    <div class="quest-chip" data-step-dot>03</div>
+                    <div class="quest-line"></div>
+                    <div class="quest-note">
+                        <span>NO SAVE</span>
+                        <strong id="game-score">0/3</strong>
+                    </div>
+                </aside>
+
+                <div class="game-stage" data-lenis-prevent>
+                    <div class="stage-topline">
+                        <span id="game-type">PWN</span>
+                        <span id="game-round">ROUND 1</span>
+                    </div>
+
+                    <div class="game-scene gate-scene">
+                        <canvas id="candy-game" width="480" height="300" aria-label="100000 candy gate"></canvas>
+                        <div class="gate-hud">
+                            <span id="candy-status">CANDY 0/100000</span>
+                            <span id="gate-status">GATE: LOCKED</span>
+                        </div>
+                    </div>
+
+                    <div class="patch-console">
+                        <div class="patch-code">
+                            <span>reverse_patch.c</span>
+                            <pre><code>int candy = <b id="patch-candy-value">0</b>;
+int need  = <input id="patch-required" value="100000" inputmode="numeric" aria-label="required candy count">;
+if (candy &gt;= need) unlock_challenge();</code></pre>
+                        </div>
+                        <div class="patch-actions">
+                            <button type="button" id="patch-need-small">patch need = 3</button>
+                            <button type="button" id="patch-score">poke candy = 99999</button>
+                            <button type="button" id="patch-jmp">jmp unlock_challenge</button>
+                        </div>
+                        <p id="patch-feedback">status: 这门要 100000 颗糖豆，正常玩完大概能悟道。</p>
+                    </div>
+
+                    <div class="game-scene challenge-scene" id="game-scene" aria-live="polite"></div>
+
+                    <div class="answer-console">
+                        <label for="game-answer">FLAG INPUT</label>
+                        <div class="game-answer-row">
+                            <input id="game-answer" placeholder="flag{...}" spellcheck="false" autocomplete="off">
+                            <button id="game-submit" type="button">RUN</button>
+                        </div>
+                        <p id="game-feedback">status: 先过糖豆门，或者像个逆向人一样改掉它。</p>
+                    </div>
+                </div>
+
+                <aside class="game-side">
+                    <div class="game-card">
+                        <span>QUEST</span>
+                        <h3 id="game-title">loading...</h3>
+                        <p id="game-brief">...</p>
+                    </div>
+
+                    <div class="game-card audio-card" id="audio-card" hidden>
+                        <span>MISC AUDIO</span>
+                        <audio id="misc-audio" controls preload="metadata" src="assets/misc/phone-recording.wav"></audio>
+                    </div>
+
+                    <div class="game-card hint-card">
+                        <span>伤感提示</span>
+                        <p id="game-hint">点场景里的东西，有些会露馅，有些只会装死。</p>
+                        <strong id="game-difficulty">难度：随机</strong>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="game-clear" id="game-clear" hidden>
+                <div class="nyan-lane" aria-hidden="true">
+                    <i></i><i></i><i></i><i></i><i></i><i></i>
+                    <div class="pixel-cat"></div>
+                </div>
+                <div class="clear-copy">
+                    <span>ALL CLEAR</span>
+                    <h3>flag 收工，今天的 Kanyo 没有被题目反杀。</h3>
+                    <p id="clear-line">sound: on / brain: maybe</p>
+                    <button type="button" id="game-retry">NEW RUN</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="works" class="adventure" data-scene="bin">
+            <div class="adventure-sticky">
+                <div class="adventure-head">
+                    <div class="number">03</div>
+                    <div>
+                        <p class="kicker">LEFT TO RIGHT // FIND THE SHELL</p>
+                        <h2 data-split>从底层一路摸到 flag。</h2>
+                    </div>
+                </div>
+
+                <div class="adventure-map" aria-hidden="true">
+                    <span class="map-dot is-active">00</span>
+                    <span class="map-line"></span>
+                    <span class="map-dot">01</span>
+                    <span class="map-line"></span>
+                    <span class="map-dot">02</span>
+                    <span class="map-line"></span>
+                    <span class="map-dot">03</span>
+                </div>
+
+                <div class="adventure-track">
+                    <article class="stage stage-bin" data-scene="bin">
+                        <div class="stage-index">00</div>
+                        <div class="stage-copy">
+                            <span>PWN // ELF CAVE</span>
+                            <h3>在二进制矿洞里找 <code>/bin/sh</code></h3>
+                            <p>偏移、泄露、libc、one_gadget，全都先别急。先确认那串字符串真的在。</p>
+                        </div>
+                        <div class="stage-art binary-art">
+                            <div class="stack-canary" data-drag-card data-runaway tabindex="0" role="button" aria-label="可拖动的 stack canary">
+                                <span>stack canary</span>
+                                <b>00</b>
+                            </div>
+                            <div class="memory-grid">
+                                <i>7f</i><i>45</i><i>4c</i><i>46</i>
+                                <i>00</i><i>2f</i><i>62</i><i>69</i>
+                                <i>6e</i><i>2f</i><i>73</i><i>68</i>
+                                <i>90</i><i>ff</i><i>e4</i><i>00</i>
+                            </div>
+                            <div class="shell-label">/bin/sh</div>
+                            <div class="pixel-hero"></div>
+                        </div>
+                    </article>
+
+                    <article class="stage stage-asm" data-scene="asm">
+                        <div class="stage-index">01</div>
+                        <div class="stage-copy">
+                            <span>RE // ASM CORRIDOR</span>
+                            <h3>进入汇编构成的通道</h3>
+                            <p>cmp、jmp、call 像地砖一样排开。能走出去的人，一般也能写出题解。</p>
+                        </div>
+                        <div class="stage-art asm-art">
+                            <pre>push rbp
+mov  rbp, rsp
+lea  rdi, [rip+shell]
+call system
+jmp  short win</pre>
+                            <div class="gobot-card" data-drag-card data-runaway tabindex="0" role="button" aria-label="可拖动的 GoBot">
+                                <div class="gobot-face">
+                                    <i></i><i></i><i></i><i></i>
+                                </div>
+                                <strong>GoBot</strong>
+                                <span>main.main smells weird</span>
+                            </div>
+                            <div class="wave-wire"></div>
+                        </div>
+                    </article>
+
+                    <article class="stage stage-web" data-scene="web">
+                        <div class="stage-index">02</div>
+                        <div class="stage-copy">
+                            <span>WEB // ATTACK SURFACE</span>
+                            <h3>穿过 cookie、SQL 和 XSS 的街区</h3>
+                            <p>参数在闪，回显在躲，WAF 在装睡。别问，问就是先抓包。</p>
+                        </div>
+                        <div class="stage-art web-art">
+                            <button class="login-leak" type="button" data-drag-card data-password-toggle aria-pressed="false">
+                                <span>POST /login</span>
+                                <strong data-password-value>password=123456</strong>
+                            </button>
+                            <div class="request-box" data-drag-card>GET /search?q=' OR 1=1--</div>
+                            <div class="request-box" data-drag-card>Cookie: role=admin?</div>
+                            <div class="request-box" data-drag-card>&lt;script&gt;alert(1)&lt;/script&gt;</div>
+                            <div class="web-grid"></div>
+                        </div>
+                    </article>
+
+                    <article class="stage stage-misc" data-scene="misc">
+                        <div class="stage-index">03</div>
+                        <div class="stage-copy">
+                            <span>MISC // NOISE ROOM</span>
+                            <h3>最后在噪声里把 flag 捞出来</h3>
+                            <p>base64、二维码、LSB、压缩包密码。套娃可以，别套我心态。</p>
+                        </div>
+                        <div class="stage-art misc-art">
+                            <div class="misc-hint" data-drag-card>贝斯手柳儿爱听网易云音乐</div>
+                            <div class="qr-noise">
+                                <i></i><i></i><i></i><i></i><i></i><i></i>
+                                <i></i><i></i><i></i><i></i><i></i><i></i>
+                                <i></i><i></i><i></i><i></i><i></i><i></i>
+                                <i></i><i></i><i></i><i></i><i></i><i></i>
+                                <i></i><i></i><i></i><i></i><i></i><i></i>
+                                <i></i><i></i><i></i><i></i><i></i><i></i>
+                            </div>
+                            <div class="misc-cipher" data-drag-card>
+                                <span>base62(xor163(flag))</span>
+                                <code id="misc-cipher-data">loading...</code>
+                            </div>
+                            <div class="flag-ribbon" id="misc-flag-preview" data-drag-card>flag{refresh_me}</div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="links" class="links">
+            <div class="number">04</div>
+            <h2 data-split>Scoreboard 下面见，别空手来。</h2>
+            <div class="link-grid">
+                <a href="https://github.com/Kanyooooo" target="_blank" rel="noreferrer">GitHub</a>
+                <a href="blog.html">Blog</a>
+                <a href="https://space.bilibili.com/393226330" target="_blank" rel="noreferrer">Bilibili</a>
+                <a href="secret.html">flag?</a>
+            </div>
+        </section>
+    </main>
 </body>
 </html>

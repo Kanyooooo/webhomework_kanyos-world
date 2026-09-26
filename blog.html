@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Kanyo 的 Obsidian 笔记博客，自动从 0x00-0x04 知识库同步生成。">
+    <title>Kanyo Note Relay</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="blog.js"></script>
+</head>
+<body class="blog-body">
+    <div class="paper-noise" aria-hidden="true"></div>
+    <div class="scanline" aria-hidden="true"></div>
+
+    <header class="topbar blog-topbar">
+        <a class="flag-mark" href="index.html" aria-label="Back to home">
+            <span></span>
+        </a>
+        <div class="login-state">[ Notes linked ]</div>
+        <nav aria-label="博客导航">
+            <a href="index.html">Home</a>
+            <a href="#posts">Posts</a>
+            <a href="#reader">Reader</a>
+            <a href="terminal.html">Terminal</a>
+        </nav>
+        <div class="mode-box">
+            <span>BLOG</span>
+            <strong>SYNC</strong>
+        </div>
+    </header>
+
+    <main class="blog-shell" id="posts">
+        <section class="blog-command">
+            <div>
+                <p class="kicker">OBSIDIAN // GIT RELAY</p>
+                <h1>Kanyo<br>Note<br>Relay</h1>
+            </div>
+            <div class="sync-readout" aria-live="polite">
+                <span>SYNC SOURCE</span>
+                <strong id="blog-sync-state">loading...</strong>
+                <small id="blog-sync-detail">0x00 - 0x04 public notes only</small>
+            </div>
+        </section>
+
+        <section class="blog-console" aria-label="博客文章浏览器">
+            <aside class="blog-sidebar">
+                <label class="blog-search">
+                    <span>SEARCH</span>
+                    <input id="blog-search" type="search" placeholder="pwn / csapp / python..." autocomplete="off">
+                </label>
+
+                <div class="blog-categories">
+                    <button class="is-active" type="button" data-category="all">ALL</button>
+                </div>
+
+                <div class="blog-stats">
+                    <span id="blog-count">-- posts</span>
+                    <span id="blog-generated">waiting for data</span>
+                </div>
+            </aside>
+
+            <section class="post-list-panel" aria-label="文章列表">
+                <div class="panel-title">LATEST NOTES</div>
+                <div class="post-list" id="post-list" aria-live="polite"></div>
+            </section>
+
+            <article class="post-reader" id="reader" aria-live="polite">
+                <div class="panel-title">READER</div>
+                <div class="reader-empty">
+                    <span>select a note</span>
+                    <strong>flag{read_more_write_more}</strong>
+                </div>
+            </article>
+        </section>
+    </main>
+</body>
+</html>

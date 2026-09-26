@@ -1,1637 +1,1368 @@
-/**
- * Preloader Logic
- */
-class Loader {
-    constructor() {
-        this.loader = document.getElementById('loader');
-        this.counter = document.querySelector('.counter');
-        this.progress = 0;
-        
-        if (this.loader && this.counter) {
-            this.init();
-        } else {
-            if(this.loader) this.loader.style.display = 'none';
-        }
-    }
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouch = window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
-    init() {
-        document.body.style.overflow = 'hidden';
-        
-        // Failsafe: Force complete after 5 seconds regardless of progress
-        setTimeout(() => {
-            if (this.progress < 100) {
-                console.warn('Loader timed out, forcing completion');
-                this.progress = 100;
-                this.complete();
+const qs = (selector, scope = document) => scope.querySelector(selector);
+const qsa = (selector, scope = document) => [...scope.querySelectorAll(selector)];
+
+let lenis;
+
+function splitText() {
+    qsa('[data-split]').forEach((el) => {
+        if (el.dataset.splitted === 'true') return;
+
+        const fragment = document.createDocumentFragment();
+
+        el.childNodes.forEach((node) => {
+            if (node.nodeName === 'BR') {
+                fragment.appendChild(document.createElement('br'));
+                return;
             }
-        }, 5000);
 
-        const interval = setInterval(() => {
-            this.progress += Math.floor(Math.random() * 10) + 1;
-            
-            if (this.progress > 100) {
-                this.progress = 100;
-                clearInterval(interval);
-                this.complete();
+            if (node.nodeType !== Node.TEXT_NODE) {
+                fragment.appendChild(node.cloneNode(true));
+                return;
             }
-            
-            this.counter.textContent = `${this.progress}%`;
-        }, 50);
-    }
 
-    complete() {
-        setTimeout(() => {
-            this.loader.style.transform = 'translateY(-100%)';
-            document.body.style.overflow = '';
-            document.body.style.overflowX = 'hidden';
-        }, 500);
-    }
-}
-
-/**
- * Custom Cursor Logic - "Bocchi" style (softer)
- */
-class Cursor {
-    constructor() {
-        this.cursor = document.getElementById('cursor');
-        this.follower = document.getElementById('cursor-follower');
-        this.pos = { x: 0, y: 0 };
-        this.mouse = { x: 0, y: 0 };
-        
-        if (this.cursor && this.follower) {
-            this.init();
-        }
-    }
-
-    init() {
-        window.addEventListener('mousemove', (e) => {
-            this.mouse.x = e.clientX;
-            this.mouse.y = e.clientY;
-            
-            // Immediate update for the dot
-            this.cursor.style.transform = `translate3d(${this.mouse.x}px, ${this.mouse.y}px, 0) translate(-50%, -50%)`;
-        });
-
-        // Add hover effects
-        const triggers = document.querySelectorAll('.hover-trigger');
-        triggers.forEach(trigger => {
-            trigger.addEventListener('mouseenter', () => {
-                this.follower.classList.add('active');
-            });
-            trigger.addEventListener('mouseleave', () => {
-                this.follower.classList.remove('active');
+            [...node.textContent].forEach((char) => {
+                const span = document.createElement('span');
+                span.className = 'char';
+                span.textContent = char === ' ' ? '\u00a0' : char;
+                fragment.appendChild(span);
             });
         });
 
-        this.render();
-    }
-
-    render() {
-        this.pos.x += (this.mouse.x - this.pos.x) * 0.1;
-        this.pos.y += (this.mouse.y - this.pos.y) * 0.1;
-
-        this.follower.style.transform = `translate3d(${this.pos.x}px, ${this.pos.y}px, 0) translate(-50%, -50%)`;
-
-        requestAnimationFrame(() => this.render());
-    }
+        el.replaceChildren(fragment);
+        el.dataset.splitted = 'true';
+    });
 }
 
-/**
- * Canvas Background Effect - Floating Shapes (Cubes & Triangles)
- */
-class CanvasBackground {
-    constructor() {
-        this.canvas = document.getElementById('bg-canvas');
-        if (!this.canvas) return;
-        
-        this.ctx = this.canvas.getContext('2d');
-        this.shapes = [];
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
-        this.mouse = { x: -1000, y: -1000 }; // Initialize off-screen
-        
-        this.colors = ['#e57283', '#fcd53f', '#0077b6', '#d93838']; // Theme colors
-        
-        this.init();
+function initSmoothScroll() {
+    if (prefersReducedMotion || isTouch || !window.Lenis) return;
+
+    lenis = new Lenis({
+        duration: 1.28,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        wheelMultiplier: 0.72,
+        touchMultiplier: 1.12,
+        overscroll: false
+    });
+
+    lenis.on('scroll', () => {
+        if (window.ScrollTrigger) ScrollTrigger.update();
+    });
+
+    if (window.gsap) {
+        gsap.ticker.add((time) => lenis.raf(time * 1000));
+        gsap.ticker.lagSmoothing(0);
+        return;
     }
 
-    init() {
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-        window.addEventListener('mousemove', (e) => {
-            this.mouse.x = e.clientX;
-            this.mouse.y = e.clientY;
-        });
-
-        // Create shapes
-        const shapeCount = this.width < 768 ? 20 : 50;
-        for (let i = 0; i < shapeCount; i++) {
-            this.shapes.push(new Shape(this.width, this.height, this.colors));
-        }
-
-        this.animate();
-    }
-
-    resize() {
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
-    }
-
-    animate() {
-        this.ctx.clearRect(0, 0, this.width, this.height);
-        
-        this.shapes.forEach(shape => {
-            shape.update(this.width, this.height, this.mouse);
-            shape.draw(this.ctx);
-        });
-
-        requestAnimationFrame(() => this.animate());
-    }
+    const raf = (time) => {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+    };
+    requestAnimationFrame(raf);
 }
 
-class Shape {
-    constructor(w, h, colors) {
-        this.x = Math.random() * w;
-        this.y = Math.random() * h;
-        
-        // Base velocity
-        this.baseVx = (Math.random() - 0.5) * 0.8;
-        this.baseVy = (Math.random() - 0.5) * 0.8;
-        this.vx = this.baseVx;
-        this.vy = this.baseVy;
-        
-        this.size = Math.random() * 20 + 10;
-        this.color = colors[Math.floor(Math.random() * colors.length)];
-        this.rotation = Math.random() * Math.PI * 2;
-        this.rotationSpeed = (Math.random() - 0.5) * 0.02;
-        
-        // Shape Logic: Yellow (#fcd53f) must be triangle (Nijika's Doritos)
-        // Others can be squares (Bocchi's boxes) or random
-        if (this.color === '#fcd53f') {
-            this.type = 'triangle';
-        } else {
-            this.type = 'square';
-        }
-    }
+function initAnchors() {
+    qsa('a[href^="#"]').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            const target = qs(link.getAttribute('href'));
+            if (!target) return;
 
-    update(w, h, mouse) {
-        // Mouse Interaction (Repulsion/Anxiety)
-        const dx = this.x - mouse.x;
-        const dy = this.y - mouse.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const interactionRadius = 200;
-
-        if (dist < interactionRadius) {
-            const force = (interactionRadius - dist) / interactionRadius;
-            const angle = Math.atan2(dy, dx);
-            
-            // Push away faster when close
-            this.vx += Math.cos(angle) * force * 1.5;
-            this.vy += Math.sin(angle) * force * 1.5;
-            
-            // Spin faster when scared
-            this.rotation += 0.1;
-        }
-
-        // Friction to return to base speed
-        this.vx += (this.baseVx - this.vx) * 0.05;
-        this.vy += (this.baseVy - this.vy) * 0.05;
-
-        this.x += this.vx;
-        this.y += this.vy;
-        this.rotation += this.rotationSpeed;
-
-        // Boundary wrap
-        if (this.x < -50) this.x = w + 50;
-        if (this.x > w + 50) this.x = -50;
-        if (this.y < -50) this.y = h + 50;
-        if (this.y > h + 50) this.y = -50;
-    }
-
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
-        ctx.fillStyle = this.color;
-        ctx.globalAlpha = 0.6; 
-
-        if (this.type === 'square') {
-            // Draw Box
-            ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-        } else if (this.type === 'triangle') {
-            // Draw Dorito
-            ctx.beginPath();
-            // Equilateral triangle calculation
-            const h = this.size * (Math.sqrt(3)/2);
-            ctx.moveTo(0, -h / 2);
-            ctx.lineTo(this.size / 2, h / 2);
-            ctx.lineTo(-this.size / 2, h / 2);
-            ctx.closePath();
-            ctx.fill();
-        }
-        
-        ctx.restore();
-    }
+            event.preventDefault();
+            if (lenis) {
+                const headerOffset = -(qs('.topbar')?.offsetHeight || 0);
+                lenis.scrollTo(target, { duration: 1.05, offset: headerOffset });
+            } else {
+                target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+            }
+        });
+    });
 }
 
-/**
- * Smooth Scroll Implementation
- */
-class SmoothScroll {
-    constructor() {
-        this.content = document.getElementById('smooth-content');
-        if (!this.content) return;
+function initMotion() {
+    if (!window.gsap || !window.ScrollTrigger) return;
 
-        this.current = 0;
-        this.target = 0;
-        this.ease = 0.05; // Smoothness factor
-        this.isAnimating = false; // Lock for transitions
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.config({ nullTargetWarn: false });
 
-        this.dom = {
-            el: this.content,
-            height: this.content.getBoundingClientRect().height
-        };
-        
-        // Define Sections
-        // We use window.innerHeight as unit "h"
-        // 1. Home: 0
-        // 2. About: 1h
-        // 3. Links: 2h (Height 4h) -> End at 6h
-        // 4. Guitar: 6h
-        // 5. Gallery: 7h (Height 6h) -> End at 13h
-        // 6. Let's Rock: 13h
-        // 7. Footer: 14h
-        
-        this.init();
-    }
+    gsap.to('.progress', {
+        scaleX: 1,
+        ease: 'none',
+        scrollTrigger: {
+            trigger: document.documentElement,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 0.2
+        }
+    });
 
-    init() {
-        document.body.style.height = `${this.dom.height}px`;
-        
-        // Calculate Section Offsets dynamically
-        this.calcOffsets();
+    initAdventure();
 
-        // Hijack Wheel
-        window.addEventListener('wheel', (e) => this.onWheel(e), { passive: false });
-
-        window.addEventListener('resize', () => {
-            this.dom.height = this.content.getBoundingClientRect().height;
-            document.body.style.height = `${this.dom.height}px`;
-            this.calcOffsets();
+    if (prefersReducedMotion) {
+        gsap.set('.char, .terminal-lines p, .hero-actions, .pixel-cluster i, .right-menu', {
+            clearProps: 'all',
+            opacity: 1
         });
-
-        this.render();
+        return;
     }
 
-    calcOffsets() {
-        // Get exact positions from DOM
-        const getTop = (id) => {
-            const el = document.getElementById(id);
-            return el ? el.offsetTop : 0;
-        };
-        
-        // Assuming standard order in HTML
-        this.sections = {
-            home: { start: 0, end: getTop('about') },
-            about: { start: getTop('about'), end: getTop('links') },
-            links: { start: getTop('links'), end: getTop('guitar') },
-            guitar: { start: getTop('guitar'), end: getTop('gallery') },
-            gallery: { start: getTop('gallery'), end: getTop('lets-rock') },
-            letsRock: { start: getTop('lets-rock'), end: document.body.scrollHeight }
-        };
-    }
+    const heroTl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+    heroTl
+        .from('.terminal-lines p', {
+            x: -18,
+            opacity: 0,
+            duration: 0.58,
+            stagger: 0.12
+        })
+        .from('.tiny-flag', {
+            opacity: 0,
+            duration: 0.72
+        }, 0.08)
+        .from('.pixel-title .char', {
+            yPercent: 110,
+            opacity: 0,
+            duration: 0.86,
+            stagger: { each: 0.014, from: 'random' }
+        }, 0.16)
+        .from('.hero-actions', {
+            y: 22,
+            opacity: 0,
+            duration: 0.62
+        }, 0.55)
+        .from('.right-menu a', {
+            x: 16,
+            opacity: 0,
+            duration: 0.48,
+            stagger: 0.06
+        }, 0.62)
+        .from('.pixel-cluster i', {
+            scale: 0,
+            opacity: 0,
+            transformOrigin: '50% 50%',
+            duration: 0.34,
+            stagger: { each: 0.035, from: 'random' }
+        }, 0.3);
 
-    onWheel(e) {
-        e.preventDefault();
-        
-        // If locked in animation, ignore input
-        if (this.isAnimating) return;
-
-        const delta = e.deltaY;
-        const currentPos = this.target;
-        const s = this.sections;
-        const h = window.innerHeight; // Viewport height for offsets
-        
-        // --- Logic Board ---
-        
-        // 1. Home
-        if (currentPos < s.home.end - 10) {
-            if (delta > 0) this.scrollTo(s.about.start); 
-            return;
+    gsap.to('.pixel-title', {
+        '--depth-y': '-78px',
+        scale: 0.92,
+        ease: 'none',
+        scrollTrigger: {
+            trigger: '.hero',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 0.8
         }
+    });
 
-        // 2. About
-        if (currentPos >= s.about.start - 10 && currentPos < s.about.end - 10) {
-            if (delta > 0) this.scrollTo(s.links.start); 
-            else if (delta < 0) this.scrollTo(s.home.start); 
-            return;
+    gsap.to('.cluster-a', {
+        '--float-y': '-92px',
+        '--float-x': '-24px',
+        ease: 'none',
+        scrollTrigger: {
+            trigger: '.hero',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 1
         }
+    });
 
-        // 3. Links (Tall)
-        if (currentPos >= s.links.start - 10 && currentPos < s.links.end - 10) {
-            if (delta > 0) {
-                // Manual scroll is allowed up to a point
-                this.target += delta;
-            } else {
-                if (currentPos <= s.links.start + 10) this.scrollTo(s.about.start); 
-                else this.target += delta;
+    gsap.to('.cluster-b', {
+        '--float-y': '104px',
+        '--float-x': '18px',
+        ease: 'none',
+        scrollTrigger: {
+            trigger: '.hero',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 1
+        }
+    });
+
+    gsap.to('.vertical-label', {
+        yPercent: -18,
+        ease: 'none',
+        scrollTrigger: {
+            trigger: '.hero',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 1.2
+        }
+    });
+
+    qsa('.statement [data-split], .game-head [data-split], .adventure-head [data-split], .links [data-split]').forEach((el) => {
+        gsap.from(el.querySelectorAll('.char'), {
+            yPercent: 80,
+            opacity: 0.08,
+            duration: 0.7,
+            stagger: 0.006,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: el,
+                start: 'top 78%',
+                end: 'top 36%',
+                scrub: 0.55
             }
-            this.clampTarget();
-            return;
-        }
-
-        // 4. Guitar
-        if (currentPos >= s.guitar.start - 10 && currentPos < s.guitar.end - 10) {
-            if (delta > 0) this.scrollTo(s.gallery.start); 
-            else if (delta < 0) this.scrollTo(s.links.end - h); // Back to bottom of Links
-            return;
-        }
-
-        // 5. Gallery (Tall)
-        if (currentPos >= s.gallery.start - 10 && currentPos < s.gallery.end - 10) {
-            if (delta > 0) {
-                 const sectionH = s.gallery.end - s.gallery.start;
-                 const progress = (currentPos - s.gallery.start) / sectionH;
-                 
-                 // "Starts to crush" -> Cube Rotation > 0.85
-                 if (progress > 0.85) {
-                     this.scrollTo(s.letsRock.start, true); // Spring to Let's Rock
-                 } else {
-                     this.target += delta;
-                 }
-            } else {
-                if (currentPos <= s.gallery.start + 10) this.scrollTo(s.guitar.start); 
-                else this.target += delta;
-            }
-            this.clampTarget();
-            return;
-        }
-
-        // 6. Let's Rock / Footer
-        if (currentPos >= s.letsRock.start - 10) {
-             this.target += delta;
-             this.clampTarget();
-        }
-    }
-    
-    clampTarget() {
-        if (this.target < 0) this.target = 0;
-        if (this.target > this.dom.height - window.innerHeight) this.target = this.dom.height - window.innerHeight;
-    }
-
-    scrollTo(y, useSpring = false, customDuration = 0) {
-        if (this.isAnimating) return;
-        this.isAnimating = true;
-        
-        // Custom animation loop for "Spring" or standard ease
-        const start = this.current;
-        const dist = y - start;
-        
-        let duration;
-        if (customDuration > 0) {
-            duration = customDuration;
-        } else {
-            duration = useSpring ? 2500 : 1800;
-        }
-
-        const startTime = performance.now();
-        
-        const animate = (time) => {
-            const elapsed = time - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            
-            // Easing functions
-            let ease;
-            if (useSpring) {
-                // Soft Elastic Out (Very dampened, elegant wobble)
-                const p = progress;
-                if (p === 0 || p === 1) ease = p;
-                else {
-                    const c4 = (2 * Math.PI) / 6; // Lower frequency = slower wobble
-                    ease = Math.pow(2, -10 * p) * Math.sin((p * 10 - 0.75) * c4) + 1;
-                }
-            } else {
-                // Quintic Out (More extreme smoothness than Power4)
-                ease = 1 - Math.pow(1 - progress, 5);
-            }
-            
-            this.current = start + (dist * ease);
-            this.target = this.current; // Sync target
-            
-            // Update Visuals
-            const currentY = -this.current.toFixed(2);
-            this.content.style.transform = `translate3d(0, ${currentY}px, 0)`;
-            this.parallax();
-            window.dispatchEvent(new CustomEvent('smoothscroll', { detail: { y: this.current } }));
-            
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                this.isAnimating = false;
-                this.target = y; // Ensure final exact value
-            }
-        };
-        
-        requestAnimationFrame(animate);
-    }
-
-    render() {
-        if (!this.isAnimating) {
-            // Normal smooth float logic when not locked
-            this.current += (this.target - this.current) * this.ease;
-            const y = -this.current.toFixed(2);
-            this.content.style.transform = `translate3d(0, ${y}px, 0)`;
-            this.parallax();
-            window.dispatchEvent(new CustomEvent('smoothscroll', { detail: { y: this.current } }));
-
-            // --- TRIGGER CHECK: Auto-Scroll Logic in Render Loop ---
-            // This ensures we catch the exact moment visually, regardless of input momentum
-            const s = this.sections;
-            if (s && s.links) {
-                // Check if we are in Links Section
-                if (this.current >= s.links.start && this.current < s.links.end) {
-                    const sectionH = s.links.end - s.links.start;
-                    const progress = (this.current - s.links.start) / sectionH;
-                    
-                    // Trigger exactly when Orbit Ends (0.5) + slight buffer (0.02)
-                    // If user scrolls past 0.52 visually, we take over.
-                    if (progress > 0.52) {
-                        // console.log("Auto-Trigger: Orbit Ended, starting cinematic zoom");
-                        this.scrollTo(s.guitar.start, false, 3000);
-                    }
-                }
-            }
-        }
-        
-        requestAnimationFrame(() => this.render());
-    }
-
-    parallax() {
-        const parallaxElements = document.querySelectorAll('.parallax');
-        parallaxElements.forEach(el => {
-            const speed = el.getAttribute('data-speed') || 0;
-            const y = (this.current * speed).toFixed(2);
-            el.style.transform = `translate3d(0, ${y}px, 0)`;
         });
-    }
+    });
+
+    gsap.from('.lab-frame, .challenge-board', {
+        y: 70,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.08,
+        ease: 'power3.out',
+        immediateRender: false,
+        scrollTrigger: {
+            trigger: '.lab',
+            start: 'top 72%',
+            once: true
+        }
+    });
+
+    gsap.from('.game-shell', {
+        y: 70,
+        opacity: 0,
+        duration: 0.82,
+        ease: 'power3.out',
+        immediateRender: false,
+        scrollTrigger: {
+            trigger: '.game-zone',
+            start: 'top 70%',
+            once: true
+        }
+    });
 }
 
-/**
- * Speed Lines Effect for Tunnel Transition
- */
-class SpeedLines {
-    constructor() {
-        this.canvas = document.getElementById('tunnel-canvas');
-        if (!this.canvas) return;
-        
-        this.ctx = this.canvas.getContext('2d');
-        this.lines = [];
-        this.numLines = 50;
-        this.centerX = window.innerWidth / 2;
-        this.centerY = window.innerHeight / 2;
-        
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-        this.initLines();
+function initAdventure() {
+    const section = qs('.adventure');
+    const sticky = qs('.adventure-sticky');
+    const track = qs('.adventure-track');
+    const stages = qsa('.stage');
+    const mapDots = qsa('.map-dot');
+    if (!section || !sticky || !track || !stages.length || !window.gsap || !window.ScrollTrigger) return;
+
+    const setScene = (index) => {
+        const clamped = Math.max(0, Math.min(stages.length - 1, index));
+        section.dataset.scene = stages[clamped].dataset.scene || 'bin';
+        mapDots.forEach((dot, dotIndex) => {
+            dot.classList.toggle('is-active', dotIndex === clamped);
+        });
+    };
+
+    setScene(0);
+
+    if (window.innerWidth <= 900) {
+        stages.forEach((stage, index) => {
+            ScrollTrigger.create({
+                trigger: stage,
+                start: 'top 48%',
+                end: 'bottom 48%',
+                onEnter: () => setScene(index),
+                onEnterBack: () => setScene(index)
+            });
+        });
+        return;
     }
-    
-    resize() {
-        if (!this.canvas) return;
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-        this.centerX = this.canvas.width / 2;
-        this.centerY = this.canvas.height / 2;
+
+    const distance = () => Math.max(0, track.scrollWidth - window.innerWidth);
+
+    gsap.to(track, {
+        x: () => -distance(),
+        ease: 'none',
+        scrollTrigger: {
+            trigger: section,
+            start: 'top top',
+            end: () => `+=${distance()}`,
+            scrub: 0.75,
+            pin: sticky,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => {
+                setScene(Math.round(self.progress * (stages.length - 1)));
+            }
+        }
+    });
+}
+
+function initPointerDepth() {
+    const hero = qs('.hero');
+    if (!hero || prefersReducedMotion || !window.gsap || isTouch) return;
+
+    const setFrameX = gsap.quickTo(hero, '--cursor-frame-x', { duration: 0.7, ease: 'power3.out' });
+    const setFrameY = gsap.quickTo(hero, '--cursor-frame-y', { duration: 0.7, ease: 'power3.out' });
+    const setTitleX = gsap.quickTo(hero, '--cursor-title-x', { duration: 0.7, ease: 'power3.out' });
+    const setTitleY = gsap.quickTo(hero, '--cursor-title-y', { duration: 0.7, ease: 'power3.out' });
+    const setBgX = gsap.quickTo(hero, '--cursor-bg-x', { duration: 0.7, ease: 'power3.out' });
+    const setBgY = gsap.quickTo(hero, '--cursor-bg-y', { duration: 0.7, ease: 'power3.out' });
+
+    hero.addEventListener('pointermove', (event) => {
+        const rect = hero.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width - 0.5) * 28;
+        const y = ((event.clientY - rect.top) / rect.height - 0.5) * 22;
+        setFrameX(`${x.toFixed(2)}px`);
+        setFrameY(`${y.toFixed(2)}px`);
+        setTitleX(`${(-x * 0.5).toFixed(2)}px`);
+        setTitleY(`${(-y * 0.5).toFixed(2)}px`);
+        setBgX(`${(-x * 0.45).toFixed(2)}px`);
+        setBgY(`${(-y * 0.45).toFixed(2)}px`);
+    });
+}
+
+function initDraggableBits() {
+    const targets = qsa('.pixel-cluster');
+    if (!targets.length || isTouch) return;
+
+    targets.forEach((target) => {
+        let startX = 0;
+        let startY = 0;
+        let baseX = Number(target.dataset.dragX || 0);
+        let baseY = Number(target.dataset.dragY || 0);
+
+        target.addEventListener('pointerdown', (event) => {
+            event.preventDefault();
+            target.setPointerCapture(event.pointerId);
+            target.classList.add('is-dragging');
+            startX = event.clientX;
+            startY = event.clientY;
+            baseX = Number(target.dataset.dragX || 0);
+            baseY = Number(target.dataset.dragY || 0);
+        });
+
+        target.addEventListener('pointermove', (event) => {
+            if (!target.classList.contains('is-dragging')) return;
+
+            const nextX = baseX + event.clientX - startX;
+            const nextY = baseY + event.clientY - startY;
+            target.dataset.dragX = String(nextX);
+            target.dataset.dragY = String(nextY);
+            target.style.setProperty('--drag-x', `${nextX}px`);
+            target.style.setProperty('--drag-y', `${nextY}px`);
+        });
+
+        const stopDrag = () => target.classList.remove('is-dragging');
+        target.addEventListener('pointerup', stopDrag);
+        target.addEventListener('pointercancel', stopDrag);
+    });
+}
+
+function setCardPosition(target, x, y) {
+    target.dataset.cardX = String(x);
+    target.dataset.cardY = String(y);
+    target.style.setProperty('--card-x', `${x}px`);
+    target.style.setProperty('--card-y', `${y}px`);
+}
+
+function initStageInteractions() {
+    initPasswordToggle();
+    initDraggableCards();
+    initRunawayCards();
+}
+
+function initPasswordToggle() {
+    const leak = qs('[data-password-toggle]');
+    const value = qs('[data-password-value]');
+    if (!leak || !value) return;
+
+    const raw = 'password=123456';
+    const masked = 'password=******';
+
+    leak.addEventListener('click', () => {
+        if (leak.dataset.suppressClick === 'true') return;
+
+        const isMasked = leak.classList.toggle('is-masked');
+        leak.setAttribute('aria-pressed', String(isMasked));
+        value.textContent = isMasked ? masked : raw;
+    });
+}
+
+function initDraggableCards() {
+    const targets = qsa('[data-drag-card]');
+    if (!targets.length) return;
+
+    targets.forEach((target) => {
+        let startX = 0;
+        let startY = 0;
+        let baseX = Number(target.dataset.cardX || 0);
+        let baseY = Number(target.dataset.cardY || 0);
+        let moved = false;
+
+        target.addEventListener('pointerdown', (event) => {
+            if (event.button !== undefined && event.button !== 0) return;
+            target.setPointerCapture(event.pointerId);
+            target.classList.add('is-dragging');
+            startX = event.clientX;
+            startY = event.clientY;
+            baseX = Number(target.dataset.cardX || 0);
+            baseY = Number(target.dataset.cardY || 0);
+            moved = false;
+        });
+
+        target.addEventListener('pointermove', (event) => {
+            if (!target.classList.contains('is-dragging')) return;
+
+            const deltaX = event.clientX - startX;
+            const deltaY = event.clientY - startY;
+            moved = moved || Math.abs(deltaX) + Math.abs(deltaY) > 4;
+            setCardPosition(target, baseX + deltaX, baseY + deltaY);
+        });
+
+        const stopDrag = (event) => {
+            if (!target.classList.contains('is-dragging')) return;
+            target.classList.remove('is-dragging');
+            if (target.hasPointerCapture?.(event.pointerId)) {
+                target.releasePointerCapture(event.pointerId);
+            }
+
+            if (moved) {
+                target.dataset.suppressClick = 'true';
+                window.setTimeout(() => {
+                    delete target.dataset.suppressClick;
+                }, 80);
+            }
+        };
+
+        target.addEventListener('pointerup', stopDrag);
+        target.addEventListener('pointercancel', stopDrag);
+    });
+}
+
+function initRunawayCards() {
+    const targets = qsa('[data-runaway]');
+    if (!targets.length || prefersReducedMotion || isTouch) return;
+
+    const nudge = (target, force = 1) => {
+        if (target.classList.contains('is-dragging')) return;
+
+        const currentX = Number(target.dataset.cardX || 0);
+        const currentY = Number(target.dataset.cardY || 0);
+        const nextX = currentX + (Math.random() - 0.5) * 42 * force;
+        const nextY = currentY + (Math.random() - 0.5) * 28 * force;
+        setCardPosition(target, Math.round(nextX), Math.round(nextY));
+    };
+
+    targets.forEach((target) => {
+        target.addEventListener('pointerenter', () => nudge(target, 1.45));
+        target.addEventListener('focus', () => nudge(target, 1));
+    });
+
+    window.setInterval(() => {
+        if (document.hidden) return;
+        const target = targets[Math.floor(Math.random() * targets.length)];
+        nudge(target, 0.65);
+    }, 3200);
+}
+
+function initGameZone() {
+    const zone = qs('.game-zone');
+    const scene = qs('#game-scene');
+    const input = qs('#game-answer');
+    const submit = qs('#game-submit');
+    const retry = qs('#game-retry');
+    const title = qs('#game-title');
+    const brief = qs('#game-brief');
+    const hint = qs('#game-hint');
+    const difficulty = qs('#game-difficulty');
+    const type = qs('#game-type');
+    const round = qs('#game-round');
+    const feedback = qs('#game-feedback');
+    const score = qs('#game-score');
+    const clear = qs('#game-clear');
+    const clearLine = qs('#clear-line');
+    const audioCard = qs('#audio-card');
+    const miscAudio = qs('#misc-audio');
+    const dots = qsa('[data-step-dot]');
+    const candyCanvas = qs('#candy-game');
+    const candyStatus = qs('#candy-status');
+    const gateStatus = qs('#gate-status');
+    const patchCandyValue = qs('#patch-candy-value');
+    const patchRequired = qs('#patch-required');
+    const patchNeedSmall = qs('#patch-need-small');
+    const patchScore = qs('#patch-score');
+    const patchJmp = qs('#patch-jmp');
+    const patchFeedback = qs('#patch-feedback');
+    if (!zone || !scene || !input || !submit || !title || !brief || !hint || !difficulty || !type || !round || !feedback || !score || !clear) return;
+
+    const normalizeAnswer = (value) => value.trim().replace(/\s+/g, '').toLowerCase();
+    const shuffle = (items) => [...items].sort(() => Math.random() - 0.5);
+    const clearLines = [
+        'sound: on / brain: suspiciously warm',
+        'rainbow packet delivered, please stop staring at wireshark',
+        'Nyan mode loaded. 题目说它今天也想下班。',
+        'all solved. 现在可以假装自己只是随便看看。'
+    ];
+
+    function base62Xor163(value) {
+        const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const bytes = [...value].map((char) => char.charCodeAt(0) ^ 0xa3);
+        let big = 0n;
+
+        bytes.forEach((byte) => {
+            big = (big << 8n) + BigInt(byte);
+        });
+
+        if (big === 0n) return '0';
+
+        let encoded = '';
+        while (big > 0n) {
+            encoded = alphabet[Number(big % 62n)] + encoded;
+            big /= 62n;
+        }
+        return encoded;
     }
-    
-    initLines() {
-        const colors = ['#e57283', '#fcd53f', '#0077b6', '#888888'];
-        const dataItems = [
-            "LINK 01: BLOG",
-            "LINK 02: FRIENDS",
-            "LINK 03: GITHUB",
-            "LINK 04: BILIBILI",
-            "GUITAR SESSION",
-            "SYSTEM/SECURITY",
-            "PWN/BINARY",
-            "BOCCHI THE ROCK"
+
+    function makeChallengePool() {
+        const miscFlags = [
+            'flag{xor163_is_not_a_love_language}',
+            'flag{netease_comment_area_has_no_flag}',
+            'flag{bassline_says_stop_using_online_decoder}',
+            'flag{misc_players_need_sleep_too}',
+            'flag{liuer_heard_it_but_refused_to_tell_you}'
         ];
+        const miscFlag = miscFlags[Math.floor(Math.random() * miscFlags.length)];
+        const miscCipher = base62Xor163(miscFlag);
 
-        for (let i = 0; i < this.numLines; i++) {
-            // 30% chance to be an informational line
-            const isInfo = Math.random() < 0.3;
-            
-            this.lines.push({
-                x: Math.random() * this.canvas.width,
-                y: Math.random() * this.canvas.height,
-                z: Math.random() * 2 + 0.5, // Depth factor
-                color: colors[Math.floor(Math.random() * colors.length)],
-                data: isInfo ? dataItems[Math.floor(Math.random() * dataItems.length)] : null,
-                width: isInfo ? 2 : 1 // Thicker lines for info
-            });
-        }
-    }
-    
-    draw(progress) {
-        if (!this.canvas) return;
-        
-        // Clear canvas
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // Map progress (0.4 to 0.9) to opacity and speed
-        // Active range: 0.4 -> 0.9
-        let activeProgress = (progress - 0.4) / 0.5;
-        if (activeProgress < 0) activeProgress = 0;
-        if (activeProgress > 1) activeProgress = 1;
-        
-        // Acceleration Curve: Power function for dramatic zoom
-        const acceleration = Math.pow(activeProgress, 3) * 50; 
-        
-        this.canvas.style.opacity = activeProgress;
-        
-        if (activeProgress <= 0) return;
-        
-        // Font settings for info lines
-        this.ctx.font = '12px "JetBrains Mono", monospace';
-        this.ctx.textAlign = 'left';
-        this.ctx.textBaseline = 'middle';
-        
-        this.lines.forEach(line => {
-            this.ctx.strokeStyle = line.color;
-            this.ctx.lineWidth = line.width || 2;
-            
-            // Calculate direction from center
-            const dx = line.x - this.centerX;
-            const dy = line.y - this.centerY;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            
-            // Speed increases with progress drastically
-            const speed = (10 + acceleration) * line.z;
-            
-            // Move line outwards
-            const moveX = (dx / dist) * speed;
-            const moveY = (dy / dist) * speed;
-            
-            line.x += moveX;
-            line.y += moveY;
-            
-            // Reset if out of bounds
-            // Reset logic: spawn near center to create tunnel effect
-            if (line.x < 0 || line.x > this.canvas.width || line.y < 0 || line.y > this.canvas.height) {
-                // Spawn in a small radius around center
-                const spawnRadius = 100 * (1 - activeProgress); // Tighter spawn as we go faster
-                const angle = Math.random() * Math.PI * 2;
-                const r = Math.random() * spawnRadius;
-                
-                line.x = this.centerX + Math.cos(angle) * r;
-                line.y = this.centerY + Math.sin(angle) * r;
+        return [
+            {
+                id: 'block-pwn',
+                type: 'PWN',
+                title: '32-bit Block PWN',
+                brief: '积木程序只会拖块、运行、cat。它很诚实，诚实得像没开 PIE。',
+                hint: '黄昏把操场切成 32 位，积木一块块落下，像那些没对齐的栈帧。\n\n我以为拼错的是青春，后来才发现只是忘了 cat。',
+                difficulty: '难度：中等-',
+                answers: ['flag{y0u_4re_really_pwn3r!}'],
+                scene: `
+                    <div class="scene-layout scene-pwn">
+                        <div class="block-program" data-game-drag>
+                            <span class="block-token token-green">when run</span>
+                            <span class="block-token">open("./flag")</span>
+                            <button class="block-token token-pink" type="button" data-game-output="flag{y0u_4re_really_pwn3r!}">cat flag.txt</button>
+                            <span class="block-token">print(stdout)</span>
+                        </div>
+                        <div class="game-monitor">
+                            <span>$ ./block32 --please</span>
+                            <code data-output-line>stdout: 你倒是点 cat 啊</code>
+                        </div>
+                        <div class="mini-stack" data-game-drag data-game-runaway>
+                            <b>CANARY</b>
+                            <i>00</i><i>a7</i><i>ff</i><i>??</i>
+                        </div>
+                    </div>`
+            },
+            {
+                id: 'voice-misc',
+                type: 'MISC',
+                title: 'Phone Recording',
+                brief: '一段手机录音。听完以后，请不要把网易云评论区搬进 writeup。',
+                hint: '人民商场里的那架旧琴依旧还在，漆皮斑驳，音准早失。大多数的旋律早就在回忆里模糊，唯有那段他演奏时的，那几个重音、后半段加花格外清晰。\n\n指尖悬在琴键上，不敢触碰。当年未懂的顿挫，是否藏着未尽之言？\n\n于是我顺着回忆开始弹奏……',
+                difficulty: '难度：中等-',
+                audio: true,
+                answers: ['flag{I_LOVE_YOU}', 'flag{ILOVEYOU}', 'flag{I-LOVE-YOU}'],
+                scene: `
+                    <div class="scene-layout scene-audio">
+                        <div class="pixel-piano" data-game-drag>
+                            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                        </div>
+                        <div class="cassette">
+                            <b>PHONE_REC.WAV</b>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <div class="wave-grid" aria-hidden="true">
+                            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                        </div>
+                    </div>`
+            },
+            {
+                id: 'web-login',
+                type: 'WEB',
+                title: 'Weak Password Romance',
+                brief: '登录框把真心写在脸上：password=123456。点它，它还会害羞。',
+                hint: '那年夏天，表单里的 placeholder 比告白还直白。\n\n他说密码会永远记得我，直到我发现每个人都是 123456。',
+                difficulty: '难度：入门，但侮辱性较强',
+                answers: ['flag{password_123456_is_not_a_strategy}'],
+                scene: `
+                    <div class="scene-layout scene-web">
+                        <button class="leak-password" type="button" data-password-toggle aria-pressed="false">
+                            <span>POST /login</span>
+                            <strong data-password-value>password=123456</strong>
+                        </button>
+                        <div class="request-stack" data-game-drag>
+                            <span>if password == "123456":</span>
+                            <code>return "flag{password_123456_is_not_a_strategy}"</code>
+                        </div>
+                        <div class="cookie-chip" data-game-drag>Cookie: role=admin?</div>
+                        <div class="web-pixels" aria-hidden="true"></div>
+                    </div>`
+            },
+            {
+                id: 're-gobot',
+                type: 'RE',
+                title: 'GoBot Strings',
+                brief: 'Go 写出来的东西，最先反抗的是符号名，然后是你的耐心。',
+                hint: '他像自动贩卖机前沉默的少年，递出一罐冰冷的 strings。\n\n拉环打开，汽水没有气，flag 倒是溢出来了。',
+                difficulty: '难度：中等，主要难在别想太多',
+                answers: ['flag{gobot_said_strings_first}'],
+                scene: `
+                    <div class="scene-layout scene-re">
+                        <button class="gobot-card game-gobot" type="button" data-game-output="flag{gobot_said_strings_first}" data-game-runaway>
+                            <div class="gobot-face">
+                                <i></i><i></i><i></i><i></i>
+                            </div>
+                            <strong>GoBot</strong>
+                            <span>main.main knows something</span>
+                        </button>
+                        <pre class="asm-sheet" data-game-drag>cmp eax, 0x2a
+jnz short cry
+call runtime.morestack
+lea rdi, flag_string</pre>
+                        <div class="game-monitor">
+                            <span>$ strings gobot | grep flag</span>
+                            <code data-output-line>stdout: 点一下 GoBot，它会装作没听见</code>
+                        </div>
+                    </div>`
+            },
+            {
+                id: 'misc-cipher',
+                type: 'MISC',
+                title: 'Base62 After XOR163',
+                brief: '贝斯手柳儿爱听网易云音乐。下面这串是 base62(xor163(flag))，别怪歌单。',
+                hint: '雨后的地铁口，有人把耳机分给了左耳。\n\n我听见低频在心里绕了 163 圈，最后变成一串看起来很想被丢进脚本的字母。',
+                difficulty: '难度：中等，手算属于自虐',
+                answers: [miscFlag],
+                scene: `
+                    <div class="scene-layout scene-cipher">
+                        <div class="lyric-board" data-game-drag>贝斯手柳儿爱听网易云音乐</div>
+                        <div class="cipher-box">
+                            <span>base62(xor163(flag))</span>
+                            <code>len=${miscFlag.length}
+${miscCipher}</code>
+                        </div>
+                        <div class="qr-noise mini-qr" data-game-drag>
+                            <i></i><i></i><i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i><i></i><i></i>
+                            <i></i><i></i><i></i><i></i><i></i><i></i>
+                        </div>
+                    </div>`
             }
-            
-            // Draw line trail
-            const trailLen = speed * 3 * activeProgress;
-            
-            this.ctx.beginPath();
-            this.ctx.moveTo(line.x, line.y);
-            this.ctx.lineTo(line.x - moveX * (trailLen/speed), line.y - moveY * (trailLen/speed));
-            this.ctx.stroke();
-
-            // Draw Text for Info Lines
-            if (line.data && activeProgress > 0.2) {
-                this.ctx.fillStyle = line.color;
-                this.ctx.globalAlpha = 0.8;
-                // Position text at the head of the line
-                this.ctx.fillText(line.data, line.x + 10, line.y);
-                this.ctx.globalAlpha = 1.0;
-                
-                // Draw a small dot at the tip
-                this.ctx.beginPath();
-                this.ctx.arc(line.x, line.y, 2, 0, Math.PI * 2);
-                this.ctx.fill();
-            }
-        });
-    }
-}
-
-/**
- * Mathematically Generated Guitar Body
- * Uses Bezier Curves and Constructive Geometry to render a guitar shape
- */
-class GuitarCanvas {
-    constructor() {
-        this.canvas = document.getElementById('guitar-body-canvas');
-        if (!this.canvas) return;
-
-        this.ctx = this.canvas.getContext('2d');
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-        
-        // Initial draw
-        this.draw();
+        ];
     }
 
-    resize() {
-        // Full screen canvas to act as a mask
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
-        
-        // Update canvas resolution
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
-        
-        // Update CSS to match
-        this.canvas.style.width = '100%';
-        this.canvas.style.height = '100%';
-        
-        this.draw();
-    }
+    let queue = [];
+    let currentIndex = 0;
+    let locked = false;
+    let gateUnlocked = false;
 
-    draw() {
-        if (!this.ctx) return;
-        
-        // Clear canvas
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        const cx = this.width / 2;
-        const cy = this.height / 2;
-        // Scale guitar to fit nicely in the center
-        const scale = Math.min(this.width, this.height) * 0.13;
+    const candyGame = {
+        count: 0,
+        need: 100000,
+        tile: 20,
+        player: { x: 2, y: 12, dir: 1 },
+        candy: { x: 18, y: 5 }
+    };
+    const candyCtx = candyCanvas?.getContext('2d');
+    const candyCols = candyCanvas ? Math.floor(candyCanvas.width / candyGame.tile) : 0;
+    const candyRows = candyCanvas ? Math.floor(candyCanvas.height / candyGame.tile) : 0;
 
-        this.ctx.save();
-        // Shift drawing down so soundhole centers
-        // We want the soundhole to be at (0,0) relative to context, which is at (cx, cy)
-        this.ctx.translate(cx, cy);
-        this.ctx.rotate(Math.PI / 2); // Rotate 90 degrees to make it horizontal
-        
-        // --- Draw Neck (Behind Body) ---
-        const neckWidth = 1.0 * scale; // Thinner neck
-        const neckHeight = 8 * scale; 
-        
-        // Neck extends upwards from body (which is now Left in screen coordinates due to rotation)
-        
-        this.ctx.fillStyle = '#dcb484'; // Maple wood
-        this.ctx.fillRect(-neckWidth / 2, -7 * scale, neckWidth, 5 * scale);
-        
-        // Fretboard
-        this.ctx.fillStyle = '#5d4037'; // Rosewood
-        this.ctx.fillRect(-neckWidth / 2 + 2, -7 * scale, neckWidth - 4, 5 * scale);
+    function updateChallengeLock() {
+        if (locked) return;
 
-        // --- Draw Headstock ---
-        this.ctx.fillStyle = '#000';
-        this.ctx.beginPath();
-        const hx = 0;
-        const hy = -7 * scale;
-        this.ctx.moveTo(hx - neckWidth, hy);
-        this.ctx.lineTo(hx + neckWidth, hy);
-        this.ctx.lineTo(hx + neckWidth * 1.2, hy - 2 * scale);
-        this.ctx.lineTo(hx, hy - 2.5 * scale);
-        this.ctx.lineTo(hx - neckWidth * 1.2, hy - 2 * scale);
-        this.ctx.closePath();
-        this.ctx.fill();
-
-        // --- Draw Body using Bezier Curves (Horizontal Orientation) ---
-        this.ctx.beginPath();
-        
-        // Guitar dimensions (Even slimmer for horizontal view)
-        const bodyWidth = 3.0 * scale; // Even thinner
-        const bodyHeight = 5 * scale;
-        const waistY = -0.8 * scale; 
-        const waistWidth = 2.0 * scale; 
-        const shoulderY = -2.8 * scale; 
-        const bottomY = 3.5 * scale; 
-        
-        // Draw left side
-        this.ctx.moveTo(0, shoulderY); // Top center
-        this.ctx.bezierCurveTo(
-            -bodyWidth * 0.9, shoulderY, // Control point 1 
-            -bodyWidth, waistY - 1 * scale, // Control point 2 
-            -waistWidth, waistY // Waist
-        );
-        this.ctx.bezierCurveTo(
-            -bodyWidth * 1.1, waistY + 1.5 * scale, // Control point 1 
-            -bodyWidth * 1.1, bottomY, // Control point 2 
-            0, bottomY // Bottom center
-        );
-        
-        // Draw right side
-        this.ctx.bezierCurveTo(
-            bodyWidth * 1.1, bottomY, // Control point 1
-            bodyWidth * 1.1, waistY + 1.5 * scale, // Control point 2
-            waistWidth, waistY // Waist
-        );
-        this.ctx.bezierCurveTo(
-            bodyWidth, waistY - 1 * scale, // Control point 1
-            bodyWidth * 0.9, shoulderY, // Control point 2
-            0, shoulderY // Top center
-        );
-        
-        this.ctx.closePath();
-        
-        // Gradient Fill
-        const gradient = this.ctx.createLinearGradient(-3 * scale, -4 * scale, 3 * scale, 4 * scale);
-        gradient.addColorStop(0, '#e57283'); // Bocchi Pink
-        gradient.addColorStop(1, '#d93838');
-        
-        this.ctx.fillStyle = gradient;
-        this.ctx.shadowBlur = 20;
-        this.ctx.shadowColor = 'rgba(0,0,0,0.3)';
-        this.ctx.fill();
-        
-        // --- Draw Pickguard (Refined) ---
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; 
-        this.ctx.beginPath();
-        this.ctx.moveTo(0.6 * scale, -0.5 * scale);
-        this.ctx.bezierCurveTo(2.0 * scale, -0.5 * scale, 2.0 * scale, 2.0 * scale, 1 * scale, 2.0 * scale);
-        this.ctx.lineTo(0.6 * scale, 0.5 * scale);
-        this.ctx.fill();
-
-        // --- Draw Soundhole (Cutout) ---
-        // This cuts through EVERYTHING (Body + Background + Neck) to reveal the fixed section behind
-        this.ctx.globalCompositeOperation = 'destination-out';
-        this.ctx.beginPath();
-        const holeRadius = 1.0 * scale;
-        // Draw hole at (0,0) to align with center of screen
-        this.ctx.arc(0, 0, holeRadius, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // Restore for Rosette and other details
-        this.ctx.globalCompositeOperation = 'source-over';
-        this.ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-        this.ctx.lineWidth = 3;
-        this.ctx.beginPath();
-        this.ctx.arc(0, 0, holeRadius + 5, 0, Math.PI * 2);
-        this.ctx.stroke();
-        
-        // --- Draw Bridge ---
-        this.ctx.fillStyle = '#5d4037'; // Rosewood
-        this.ctx.fillRect(-1.5 * scale, 1.5 * scale, 3 * scale, 0.6 * scale);
-        
-        // --- Draw Strings (Over the hole, but thin) ---
-        this.ctx.strokeStyle = '#c0c0c0'; // Silver
-        this.ctx.lineWidth = 1;
-        this.ctx.beginPath();
-        const stringSpacing = 0.2 * scale;
-        for(let i = -2.5; i <= 2.5; i++) {
-            const x = i * stringSpacing;
-            this.ctx.moveTo(x, -7 * scale); // From nut
-            this.ctx.lineTo(x, 1.8 * scale); // To bridge
+        input.disabled = !gateUnlocked;
+        submit.disabled = !gateUnlocked;
+        if (!gateUnlocked) {
+            feedback.style.color = '#ff2d2d';
+            feedback.textContent = 'blocked: 糖豆门还锁着。要么吃 100000 个，要么把代码改了。';
+            return;
         }
-        this.ctx.stroke();
 
-        this.ctx.restore();
-    }
-}
-
-/**
- * Scroll Transitions Manager
- * Handles unique entrance animations and Scroll Jacking for Links Section
- */
-class ScrollTransitions {
-    constructor() {
-        this.sections = document.querySelectorAll('section, footer');
-        this.linksSection = document.getElementById('links');
-        this.speedLines = new SpeedLines();
-        
-        // Links Section Elements
-        if (this.linksSection) {
-            this.wrapper = this.linksSection.querySelector('.sticky-wrapper');
-            this.linksContent = this.linksSection.querySelector('.zoom-wrapper');
-            this.linksText = this.linksSection.querySelector('.links-text-container');
-            this.ring = this.linksSection.querySelector('.ring-container');
-            this.items = this.linksSection.querySelectorAll('.note-link');
-            this.guitarSection = document.getElementById('guitar');
+        feedback.style.color = '';
+        if (!input.value) {
+            feedback.textContent = 'status: gate unlocked，随机题可以开刀了。';
         }
-        
-        this.init();
     }
 
-    init() {
-        this.checkPositions();
-        window.addEventListener('scroll', () => this.checkPositions());
-        // Listen to custom smoothscroll event for precise animation AND visibility checks
-        window.addEventListener('smoothscroll', (e) => {
-            this.onSmoothScroll(e.detail.y);
-            this.checkPositions(); // Ensure we check visibility on virtual scroll
-        });
+    function updateCandyHud() {
+        if (candyStatus) candyStatus.textContent = `CANDY ${candyGame.count}/${candyGame.need}`;
+        if (gateStatus) gateStatus.textContent = gateUnlocked ? 'GATE: PATCHED' : 'GATE: LOCKED';
+        if (patchCandyValue) patchCandyValue.textContent = String(candyGame.count);
+        if (patchRequired && document.activeElement !== patchRequired) {
+            patchRequired.value = String(candyGame.need);
+        }
     }
 
-    checkPositions() {
-        const triggerBottom = window.innerHeight * 0.8;
-        const currentScroll = this.smoothScroll ? this.smoothScroll.current : window.scrollY; // Handle Virtual or Native
+    function placeCandy() {
+        if (!candyCols || !candyRows) return;
 
-        this.sections.forEach(section => {
-            const rect = section.getBoundingClientRect();
-            
-            // Special Logic for #about (01 Profile)
-            if (section.id === 'about') {
-                // Logic: Reveal immediately upon entering viewport (even slightly)
-                // This matches user request: "只要界面滑动，你就直接开始打开遮罩"
-                if (rect.top < window.innerHeight && rect.bottom > 0) {
-                    section.classList.add('in-view');
+        do {
+            candyGame.candy.x = 1 + Math.floor(Math.random() * (candyCols - 2));
+            candyGame.candy.y = 1 + Math.floor(Math.random() * (candyRows - 2));
+        } while (candyGame.candy.x === candyGame.player.x && candyGame.candy.y === candyGame.player.y);
+    }
+
+    function drawCandyGame() {
+        if (!candyCtx || !candyCanvas) return;
+
+        candyCtx.fillStyle = '#111';
+        candyCtx.fillRect(0, 0, candyCanvas.width, candyCanvas.height);
+
+        for (let y = 0; y < candyRows; y += 1) {
+            for (let x = 0; x < candyCols; x += 1) {
+                if ((x + y) % 2 === 0) {
+                    candyCtx.fillStyle = '#151515';
+                    candyCtx.fillRect(x * candyGame.tile, y * candyGame.tile, candyGame.tile, candyGame.tile);
                 }
-            } 
-            // Standard Logic for others
-            else if (rect.top < triggerBottom && rect.bottom > 0) {
-                section.classList.add('in-view');
+                candyCtx.strokeStyle = 'rgba(244, 244, 239, 0.055)';
+                candyCtx.strokeRect(x * candyGame.tile + 0.5, y * candyGame.tile + 0.5, candyGame.tile, candyGame.tile);
             }
-        });
+        }
+
+        const candyX = candyGame.candy.x * candyGame.tile;
+        const candyY = candyGame.candy.y * candyGame.tile;
+        candyCtx.fillStyle = '#b7ff2a';
+        candyCtx.fillRect(candyX + 5, candyY + 5, 10, 10);
+        candyCtx.fillStyle = '#f4f4ef';
+        candyCtx.fillRect(candyX + 8, candyY + 2, 4, 16);
+
+        const playerX = candyGame.player.x * candyGame.tile;
+        const playerY = candyGame.player.y * candyGame.tile;
+        candyCtx.fillStyle = '#ff6aa2';
+        candyCtx.fillRect(playerX + 5, playerY + 2, 10, 6);
+        candyCtx.fillRect(playerX + 3, playerY + 8, 14, 6);
+        candyCtx.fillStyle = '#ffd8e7';
+        candyCtx.fillRect(playerX + 6, playerY + 7, 8, 5);
+        candyCtx.fillStyle = '#111';
+        candyCtx.fillRect(playerX + 7, playerY + 9, 2, 1);
+        candyCtx.fillRect(playerX + 13, playerY + 9, 1, 1);
+        candyCtx.fillStyle = '#f4f4ef';
+        candyCtx.fillRect(playerX + 5, playerY + 16, 3, 3);
+        candyCtx.fillRect(playerX + 13, playerY + 16, 3, 3);
+
+        updateCandyHud();
     }
-    
-    onSmoothScroll(scrollY) {
-        // --- Gallery Sticky Horizontal Scroll ---
-        const gallery = document.getElementById('gallery');
-        if (gallery) {
-            const rect = gallery.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
-            const gallerySticky = gallery.querySelector('.gallery-sticky');
-            
-            const sectionTop = rect.top;
-            const sectionHeight = rect.height;
-            
-            // --- Sticky Logic ---
-            // We want to pin the .gallery-sticky container while we scroll through the section
-            if (sectionTop <= 0 && rect.bottom >= viewportHeight) {
-                // Pin it
-                if (gallerySticky) gallerySticky.style.transform = `translate3d(0, ${-sectionTop}px, 0)`;
-            } else if (sectionTop > 0) {
-                // Before
-                if (gallerySticky) gallerySticky.style.transform = 'translate3d(0, 0, 0)';
-            } else {
-                // After (bottom align)
-                if (gallerySticky) gallerySticky.style.transform = `translate3d(0, ${sectionHeight - viewportHeight}px, 0)`;
-            }
-            
-            // --- Animation Logic ---
-            // Calculate progress (0 to 1)
-            const maxScroll = sectionHeight - viewportHeight;
-            let progress = -sectionTop / maxScroll;
-            if (progress < 0) progress = 0;
-            if (progress > 1) progress = 1;
 
-            // Only animate if roughly in view
-            if (rect.top < viewportHeight && rect.bottom > 0) {
-                const layerBack = gallery.querySelector('.layer-back-text');
-                const layerImages = gallery.querySelector('.layer-images');
-                
-                
-                // Direction Logic:
-                // User wants "Images move RIGHT".
-                // If we use positive translateX, content moves RIGHT.
-                // We start from LEFT (negative X) and move towards RIGHT (positive X).
-                
-                const baseMove = 3000; // Slower speed (was 5000)
-                
-                if (layerBack) {
-                    // Back Text: Deep Background (Parallax Factor 0.3)
-                    // Start at -1500, Move to +1500
-                    const startX = -1500;
-                    const moveX = progress * baseMove * 0.3;
-                    layerBack.style.transform = `translate3d(${startX + moveX}px, 0, -100px) scale(1.1)`;
-                }
-                
-                if (layerImages) {
-                    // Images: Middle (Parallax Factor 0.6)
-                    const startX = -3000;
-                    const moveX = progress * baseMove * 0.6;
-                    layerImages.style.transform = `translate3d(${startX + moveX}px, 0, 0)`;
-                }
-                
+    function unlockGate(reason) {
+        if (gateUnlocked) return;
 
-                
-                // --- Cube Transition Logic (Gallery -> Let's Rock) ---
-                // Transition trigger zone: progress > 0.85
-                const transitionStart = 0.85;
-                if (progress > transitionStart) {
-                    const transProgress = (progress - transitionStart) / (1.0 - transitionStart); // 0 to 1
-                    
-                    const gallerySticky = gallery.querySelector('.gallery-sticky');
-                    if (gallerySticky) {
-                        gallerySticky.style.transformOrigin = 'center bottom';
-                        // Keep the Sticky Y offset but add rotation
-                        // We need to calculate the correct Y offset for sticky behavior during transition
-                        // It is still pinned until end of section
-                        gallerySticky.style.transform = `translate3d(0, ${-sectionTop}px, 0) rotateX(${transProgress * 90}deg)`;
-                        gallerySticky.style.opacity = 1 - transProgress * 0.5; 
-                    }
-                }
-            }
-        }
-        
-        // --- Independent Let's Rock Entrance Animation ---
-        const letsRockSection = document.getElementById('lets-rock');
-        if (letsRockSection) {
-            const rockRect = letsRockSection.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
-            
-            // If Let's Rock is entering from bottom
-            if (rockRect.top < viewportHeight && rockRect.bottom > -viewportHeight) {
-                let enterProgress = 1 - (rockRect.top / viewportHeight);
-                if (enterProgress < 0) enterProgress = 0;
-                if (enterProgress > 1) enterProgress = 1;
-                
-                letsRockSection.style.transformOrigin = 'center top';
-                letsRockSection.style.perspective = '1000px';
-                const rot = -90 * (1 - enterProgress);
-                letsRockSection.style.transform = `rotateX(${rot}deg)`;
-                letsRockSection.style.filter = `brightness(${enterProgress})`;
-            }
-        }
-
-        // --- Let's Rock Logic ---
-        const letsRock = document.getElementById('lets-rock');
-        if (letsRock && !letsRock.hasAttribute('data-initialized')) {
-            letsRock.setAttribute('data-initialized', 'true');
-            const rockTrigger = letsRock.querySelector('.rock-circle');
-            
-            if (rockTrigger) {
-                rockTrigger.addEventListener('click', () => {
-                    // Create Flash Overlay
-                    const flash = document.createElement('div');
-                    flash.className = 'flash-overlay';
-                    document.body.appendChild(flash);
-                    
-                    // Trigger Flash
-                    requestAnimationFrame(() => {
-                        flash.classList.add('active');
-                    });
-                    
-                    // Play Audio (if ctx exists)
-                    if (this.ctx && this.ctx.state === 'suspended') {
-                        this.ctx.resume();
-                    }
-                    if (this.ctx) {
-                        // Simple distortion chord
-                        const now = this.ctx.currentTime;
-                        const freqs = [130.81, 196.00, 261.63, 392.00]; // C Power Chord
-                        freqs.forEach(f => {
-                            const osc = this.ctx.createOscillator();
-                            osc.type = 'sawtooth';
-                            osc.frequency.value = f;
-                            const gain = this.ctx.createGain();
-                            gain.gain.setValueAtTime(0.1, now);
-                            gain.gain.exponentialRampToValueAtTime(0.01, now + 1);
-                            osc.connect(gain);
-                            gain.connect(this.masterGain);
-                            osc.start(now);
-                            osc.stop(now + 1);
-                        });
-                    }
-
-                    // Scroll to Footer after flash starts
-                    setTimeout(() => {
-                        const footer = document.getElementById('footer');
-                        if (footer) {
-                            footer.scrollIntoView({ behavior: 'auto' }); // Instant jump behind flash
-                        }
-                        
-                        // Fade out flash
-                        setTimeout(() => {
-                            flash.classList.remove('active');
-                            setTimeout(() => flash.remove(), 500);
-                        }, 100);
-                    }, 300);
-                });
-            }
-        }
-
-        if (!this.linksSection) return;
-        
-        const rect = this.linksSection.getBoundingClientRect();
-        const sectionTop = rect.top;
-        const sectionHeight = rect.height;
-        const viewportHeight = window.innerHeight;
-        
-        // --- 1. Sticky Wrapper Logic ---
-        if (sectionTop <= 0 && rect.bottom >= viewportHeight) {
-            // Pin the wrapper
-            this.wrapper.style.transform = `translate3d(0, ${-sectionTop}px, 0)`;
-        } else if (sectionTop > 0) {
-            // Before section
-            this.wrapper.style.transform = 'translate3d(0, 0, 0)';
-        } else {
-            // After section (bottom aligned)
-            this.wrapper.style.transform = `translate3d(0, ${sectionHeight - viewportHeight}px, 0)`;
-        }
-        
-        // --- 2. Animation Logic ---
-        const maxScroll = sectionHeight - viewportHeight;
-        let progress = -sectionTop / maxScroll;
-        
-        // Clamp progress
-        if (progress < 0) progress = 0;
-        if (progress > 1) progress = 1;
-        
-        // Phase 1: Notes Orbit (0.0 - 0.5)
-        const orbitStart = 0.0;
-        const orbitEnd = 0.5;
-        let orbitProgress = (progress - orbitStart) / (orbitEnd - orbitStart);
-        if (orbitProgress < 0) orbitProgress = 0;
-        if (orbitProgress > 1) orbitProgress = 1;
-        
-        if (this.items && this.ring) {
-            const rect = this.ring.getBoundingClientRect();
-            const cx = rect.width / 2;
-            const cy = rect.height / 2;
-            const baseRadius = Math.min(rect.width, rect.height) / 2 * 0.6; 
-            const radius = baseRadius * (0.3 + 0.7 * orbitProgress);
-            const rotation = orbitProgress * Math.PI * 2;
-            
-            this.items.forEach((item, index) => {
-                const angle = rotation + (index * Math.PI / 2);
-                const x = cx + radius * Math.cos(angle);
-                const y = cy + radius * Math.sin(angle);
-                
-                item.style.left = `${x}px`;
-                item.style.top = `${y}px`;
-                item.style.transform = 'translate(-50%, -50%)';
-                // Fade out notes as we zoom in next phase
-                item.style.opacity = progress > 0.5 ? 1 - (progress - 0.5) * 5 : 1;
-            });
-        }
-        
-        // Phase 2: Tunnel Effect (0.3 - 1.0)
-        this.speedLines.draw(progress);
-        
-        // Phase 3: Zoom into Soundhole (0.5 - 1.0)
-        if (this.linksContent && this.guitarSection) {
-            const zoomStart = 0.5;
-            const zoomEnd = 1.0;
-            let zoomProgress = (progress - zoomStart) / (zoomEnd - zoomStart);
-            if (zoomProgress < 0) zoomProgress = 0;
-            if (zoomProgress > 1) zoomProgress = 1;
-
-            // Scale the whole content to zoom into the center (soundhole)
-            // Power function for accelerating zoom
-            // We need enough scale to move the hole edges off screen
-            const scale = 1 + Math.pow(zoomProgress, 4) * 150; 
-            
-            this.linksContent.style.transformOrigin = 'center center';
-            this.linksContent.style.transform = `scale(${scale})`;
-            
-            // --- Synchronized Zoom for Note Links ---
-            // Instead of fading out, make them scale up and explode outwards
-            if (this.items && zoomProgress > 0) {
-                this.items.forEach((item) => {
-                    // Get current transform (from orbit phase) or reset
-                    // We want to add extra scale on top
-                    // Since we are inside linksContent which is already scaling HUGE,
-                    // we actually need to counter-scale or just let them fly.
-                    // If we scale them up too, they will become massive.
-                    // The user asked "Links zoom... simultaneously".
-                    // Since the parent (linksContent) is zooming 150x, the children ARE zooming.
-                    // But maybe they want them to stay visible longer?
-                    // Let's keep opacity 1 until very end
-                    item.style.opacity = zoomProgress > 0.8 ? 1 - (zoomProgress - 0.8) * 5 : 1;
-                });
-            }
-
-            // As we zoom, we need to make sure the Section 3 (guitarSection) is visible BEHIND the hole.
-            // We enable this logic as soon as we enter the section (rect.top < viewportHeight)
-            // And keep it until the section is fully scrolled away (rect.bottom > 0) so the handover is seamless
-            
-            if (rect.top <= 0 && rect.bottom > 0) {
-                // Instead of position: fixed (which breaks inside transformed container),
-                // use translation to visually pin it to the viewport top.
-                // rect.bottom is the distance from top of viewport to bottom of linksSection.
-                // guitarSection is naturally at rect.bottom.
-                // We want it at 0. So translate by -rect.bottom.
-                
-                this.guitarSection.style.position = 'relative'; // Keep in flow to maintain footer position
-                this.guitarSection.style.zIndex = '5'; 
-                this.guitarSection.style.opacity = 1;
-                
-                // Centered scale logic
-                this.guitarSection.style.transformOrigin = '50% 50%';
-                
-                // Exponential ease for "flying into" effect
-                // Start at calculated ratio to match string spacing
-                // Section 2 Spacing = min(w, h) * 0.13 * 0.2
-                // Section 3 Spacing approx 50px
-                // innerScale = (min(w, h) * 0.026) / 50
-                const viewportMian = Math.min(window.innerWidth, window.innerHeight);
-                const targetStartScale = (viewportMian * 0.026) / 50;
-                
-                // Use the calculated start scale, but clamp it reasonable (e.g. 0.4 to 0.8) to prevent extreme sizes
-                const startScale = Math.max(0.4, Math.min(0.8, targetStartScale));
-                
-                const ease = Math.pow(zoomProgress, 2.5); 
-                const innerScale = startScale + (1.0 - startScale) * ease; 
-                
-                // Opacity adjustment: fade in as we get closer to prevent "ghosting" too early
-                // but keep visible enough to see target
-                this.guitarSection.style.opacity = 0.8 + 0.2 * zoomProgress;
-                
-                // Apply BOTH translation (for position) and scale (for zoom)
-                this.guitarSection.style.transform = `translate3d(0, ${-rect.bottom}px, 0) scale(${innerScale})`;
-                
-                // --- CLIP PATH MASK ---
-                // We clip the guitarSection so it is ONLY visible inside the soundhole.
-                // The soundhole radius on the canvas is approximately: min(w, h) * 0.13 * 1.0 (from GuitarCanvas)
-                // However, the visual hole scales UP as zoomProgress increases.
-                // Visual Hole Radius = Base Radius * Outer Scale
-                // Outer Scale (scale) = 1 + Math.pow(zoomProgress, 4) * 150
-                
-                // Wait, if we use clip-path on guitarSection, we need to consider that guitarSection ITSELF is scaling (innerScale).
-                // So the clip-path circle radius needs to be relative to the SCALED guitarSection size? 
-                // No, clip-path is applied to the element's box.
-                // If the element is scaled by innerScale, the clip-path coordinate system is also scaled? Yes.
-                
-                // Let's simplify:
-                // Visual Hole Size on Screen = BaseHoleSize * OuterScale
-                // Guitar Section Size on Screen = ViewportSize * InnerScale
-                // We want the Visible Part of Guitar Section = Visual Hole Size
-                
-                // So, Clip Radius (in GuitarSection local coords) = (Visual Hole Size on Screen) / InnerScale
-                
-                const viewportMin = Math.min(window.innerWidth, window.innerHeight);
-                const baseHoleRadius = viewportMin * 0.13; // Matches GuitarCanvas logic
-                const visualHoleRadius = baseHoleRadius * scale; // scale is the outer zoom
-                
-                // Clip radius in local unscaled pixels (since clip-path applies before transform? No, standard CSS: clip-path applies to the box, transform scales the result)
-                // Actually, clip-path applies to the border-box. 
-                // If we transform: scale(), the visual clip path scales too.
-                // So: VisualClipRadius = DefinedClipRadius * InnerScale
-                // We want: VisualClipRadius = visualHoleRadius
-                // So: DefinedClipRadius = visualHoleRadius / innerScale
-                
-                const clipRadius = visualHoleRadius / innerScale;
-                
-                // Apply circular clip
-                this.guitarSection.style.clipPath = `circle(${clipRadius}px at 50% 50%)`;
-
-                this.guitarSection.style.willChange = 'transform, opacity, clip-path';
-
-                // --- ALIGN FRETBOARD STRINGS WITH CANVAS STRINGS ---
-                // Problem: Section 3 content (Fretboard) might not be perfectly centered relative to the screen center.
-                // We need to shift Section 3 vertically so its Fretboard Center matches the Window Center.
-                
-                const fretboard = document.getElementById('fretboard');
-                if (fretboard) {
-                    // We only need to calculate this offset once or when resize, but doing it here is safe enough for now.
-                    // However, getBoundingClientRect() depends on current transform.
-                    // We need the "natural" offset.
-                    // Let's assume the layout is stable.
-                    // Center of guitarSection is at 50% of viewport (since we translate it to top:0).
-                    // Center of Fretboard relative to guitarSection?
-                    // We can estimate this by looking at the structure.
-                    // But simpler: let's just manually tweak the offset based on user feedback "Too High".
-                    // If it's too high, we need to push it down (positive Y).
-                    // User said "Section 3 is biased upwards".
-                    // Let's try adding a fixed offset, or better, calculate it.
-                    
-                    // We can't easily get the unscaled rect during animation.
-                    // Let's add a manual adjustment factor.
-                    const yOffset = 55; // Push down more (was 40) to align strings better.
-                    
-                    // Update transform to include this offset
-                    this.guitarSection.style.transform = `translate3d(0, ${-rect.bottom + yOffset}px, 0) scale(${innerScale})`;
-                }
-                
-            } else {
-                // Reset when Links section is out of view (either above or below)
-                // If rect.bottom <= 0, we are below Links, so GuitarSection is now at top of viewport naturally.
-                this.guitarSection.style.position = '';
-                this.guitarSection.style.top = '';
-                this.guitarSection.style.left = '';
-                this.guitarSection.style.width = '';
-                this.guitarSection.style.height = '';
-                this.guitarSection.style.zIndex = '';
-                this.guitarSection.style.transform = ''; // Reset
-                this.guitarSection.style.clipPath = '';
-            }
-            
-            // Pass through clicks when zoomed in
-            // Don't fade out visually, let the hole expansion do the work
-            // Just disable interaction with the ring/links
-            if (zoomProgress > 0.8) {
-                this.linksSection.style.pointerEvents = 'none';
-            } else {
-                this.linksSection.style.pointerEvents = 'auto';
-            }
-            
-            // Ensure opacity stays 1 so we fly THROUGH the hole, not ghost through it
-            this.linksSection.style.opacity = 1;
-            
-            // Fade out title text
-            if (this.linksText) {
-                this.linksText.style.opacity = 1 - zoomProgress * 3;
-                if (this.linksText.style.opacity < 0) this.linksText.style.opacity = 0;
-            }
-        }
+        gateUnlocked = true;
+        zone.classList.add('is-gate-open');
+        updateCandyHud();
+        if (patchFeedback) patchFeedback.textContent = `patched: ${reason}`;
+        feedback.style.color = '';
+        feedback.textContent = 'status: 糖豆门被你改穿了。现在做题。';
+        input.disabled = false;
+        submit.disabled = false;
+        input.focus({ preventScroll: true });
     }
-}
 
-/**
- * Web Audio API Guitar Synthesizer - Enhanced Version
- * Supports 6 strings, 12 frets, and chords
- */
-class GuitarSynth {
-    constructor() {
-        this.fretboard = document.getElementById('fretboard');
-        this.volControl = document.getElementById('volume');
-        this.distControl = document.getElementById('distortion');
-        
-        if (!this.fretboard) return;
+    function setCandyNeed(value, reason) {
+        const nextNeed = Math.max(1, Number.parseInt(value, 10) || 1);
+        candyGame.need = nextNeed;
+        updateCandyHud();
+        if (patchFeedback) patchFeedback.textContent = `patched: need = ${nextNeed}. ${reason}`;
+        if (candyGame.count >= candyGame.need) unlockGate('condition already true, unlock_challenge() 被顺手叫醒。');
+    }
 
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        this.masterGain = this.ctx.createGain();
-        this.distortion = this.ctx.createWaveShaper();
-        
-        // Connect chain: Source -> Distortion -> MasterGain -> Destination
-        this.distortion.connect(this.masterGain);
-        this.masterGain.connect(this.ctx.destination);
-        
-        this.masterGain.gain.value = 0.5;
-        this.setDistortion(50);
-        
-        // Standard Tuning (E2, A2, D3, G3, B3, E4)
-        this.baseFreqs = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63].reverse(); // Reverse for Top-Down visual (High E top)
-        
-        // Map keyboard keys to C Major Scale (approximate range for Twinkle Twinkle)
-        // C4, D4, E4, F4, G4, A4, B4, C5
-        this.keyboardMap = {
-            'A': 261.63, // C4
-            'S': 293.66, // D4
-            'D': 329.63, // E4
-            'F': 349.23, // F4
-            'G': 392.00, // G4
-            'H': 440.00, // A4
-            'J': 493.88, // B4
-            'K': 523.25, // C5
-            'L': 587.33  // D5
+    function moveCandyPlayer(dx, dy) {
+        if (!candyCanvas) return;
+
+        const nextX = Math.max(0, Math.min(candyCols - 1, candyGame.player.x + dx));
+        const nextY = Math.max(0, Math.min(candyRows - 1, candyGame.player.y + dy));
+        candyGame.player.x = nextX;
+        candyGame.player.y = nextY;
+        if (dx) candyGame.player.dir = dx;
+
+        if (nextX === candyGame.candy.x && nextY === candyGame.candy.y) {
+            candyGame.count += 1;
+            placeCandy();
+            if (patchFeedback && !gateUnlocked) {
+                patchFeedback.textContent = `status: candy++，还差 ${Math.max(0, candyGame.need - candyGame.count)} 个。挺励志，也挺坐牢。`;
+            }
+            if (candyGame.count >= candyGame.need) unlockGate('candy >= need，正常人类路线居然成立。');
+        }
+
+        drawCandyGame();
+    }
+
+    function resetCandyGate() {
+        gateUnlocked = false;
+        zone.classList.remove('is-gate-open');
+        candyGame.count = 0;
+        candyGame.need = 100000;
+        candyGame.player = { x: 2, y: 12, dir: 1 };
+        if (patchRequired) patchRequired.value = '100000';
+        placeCandy();
+        drawCandyGame();
+        if (patchFeedback) patchFeedback.textContent = 'status: 这门要 100000 颗糖豆，正常玩完大概能悟道。';
+    }
+
+    function initCandyGate() {
+        if (!candyCanvas) return;
+
+        candyCanvas.tabIndex = 0;
+        candyCanvas.addEventListener('pointerdown', () => candyCanvas.focus({ preventScroll: true }));
+
+        const keyMap = {
+            ArrowUp: [0, -1],
+            ArrowDown: [0, 1],
+            ArrowLeft: [-1, 0],
+            ArrowRight: [1, 0],
+            w: [0, -1],
+            s: [0, 1],
+            a: [-1, 0],
+            d: [1, 0],
+            W: [0, -1],
+            S: [0, 1],
+            A: [-1, 0],
+            D: [1, 0]
         };
 
-        this.initUI();
-        this.initEvents();
-        this.initRockSolo();
+        window.addEventListener('keydown', (event) => {
+            if ([input, patchRequired].includes(document.activeElement)) return;
+
+            const rect = zone.getBoundingClientRect();
+            if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+
+            const vector = keyMap[event.key];
+            if (!vector) return;
+            event.preventDefault();
+            moveCandyPlayer(vector[0], vector[1]);
+        });
+
+        patchRequired?.addEventListener('change', () => setCandyNeed(patchRequired.value, '手改常量，青春少走九万九千九百九十七步。'));
+        patchRequired?.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            setCandyNeed(patchRequired.value, 'Enter 一按，常量就当场改命。');
+        });
+        patchNeedSmall?.addEventListener('click', () => setCandyNeed(3, '糖豆门：我是不是被羞辱了？'));
+        patchScore?.addEventListener('click', () => {
+            candyGame.count = Math.max(0, candyGame.need - 1);
+            updateCandyHud();
+            drawCandyGame();
+            if (patchFeedback) patchFeedback.textContent = 'patched: candy = need - 1. 再吃一颗，门就装不下去了。';
+        });
+        patchJmp?.addEventListener('click', () => {
+            candyGame.count = candyGame.need;
+            drawCandyGame();
+            unlockGate('jmp unlock_challenge，控制流说它想叛逆一次。');
+        });
     }
-    
-    initRockSolo() {
-        const rockWord = document.querySelector('.word-rock');
-        if (rockWord) {
-            rockWord.addEventListener('mouseenter', () => {
-                this.playRandomSolo();
+
+    function bindSceneInteractions(challenge) {
+        qsa('[data-game-drag]', scene).forEach((target) => {
+            let startX = 0;
+            let startY = 0;
+            let baseX = Number(target.dataset.cardX || 0);
+            let baseY = Number(target.dataset.cardY || 0);
+
+            target.addEventListener('pointerdown', (event) => {
+                if (event.button !== undefined && event.button !== 0) return;
+                target.setPointerCapture(event.pointerId);
+                target.classList.add('is-dragging');
+                startX = event.clientX;
+                startY = event.clientY;
+                baseX = Number(target.dataset.cardX || 0);
+                baseY = Number(target.dataset.cardY || 0);
+            });
+
+            target.addEventListener('pointermove', (event) => {
+                if (!target.classList.contains('is-dragging')) return;
+                setCardPosition(target, baseX + event.clientX - startX, baseY + event.clientY - startY);
+            });
+
+            const stopDrag = (event) => {
+                if (!target.classList.contains('is-dragging')) return;
+                target.classList.remove('is-dragging');
+                if (target.hasPointerCapture?.(event.pointerId)) {
+                    target.releasePointerCapture(event.pointerId);
+                }
+            };
+
+            target.addEventListener('pointerup', stopDrag);
+            target.addEventListener('pointercancel', stopDrag);
+        });
+
+        qsa('[data-game-runaway]', scene).forEach((target) => {
+            if (prefersReducedMotion || isTouch) return;
+
+            target.addEventListener('pointerenter', () => {
+                const nextX = Number(target.dataset.cardX || 0) + Math.round((Math.random() - 0.5) * 52);
+                const nextY = Number(target.dataset.cardY || 0) + Math.round((Math.random() - 0.5) * 34);
+                setCardPosition(target, nextX, nextY);
+            });
+        });
+
+        qsa('[data-password-toggle]', scene).forEach((button) => {
+            const value = qs('[data-password-value]', button);
+            if (!value) return;
+
+            button.addEventListener('click', () => {
+                const masked = button.classList.toggle('is-masked');
+                button.setAttribute('aria-pressed', String(masked));
+                value.textContent = masked ? 'password=********' : 'password=123456';
+                feedback.textContent = masked
+                    ? 'status: 掩耳盗铃成功，数据库已经笑出声。'
+                    : 'status: 明文回来了，安全感走了。';
+            });
+        });
+
+        qsa('[data-game-output]', scene).forEach((button) => {
+            button.addEventListener('click', () => {
+                const line = qs('[data-output-line]', scene);
+                if (line) line.textContent = `stdout: ${button.dataset.gameOutput}`;
+                feedback.textContent = challenge.id === 'block-pwn'
+                    ? 'status: cat 很配合，人类不一定。'
+                    : 'status: 它把 flag 吐出来了，表情还很无辜。';
+            });
+        });
+    }
+
+    function renderChallenge() {
+        const challenge = queue[currentIndex];
+        if (!challenge) return;
+
+        locked = false;
+        zone.dataset.challenge = challenge.type.toLowerCase();
+        type.textContent = challenge.type;
+        round.textContent = `ROUND ${currentIndex + 1}`;
+        title.textContent = challenge.title;
+        brief.textContent = challenge.brief;
+        hint.textContent = challenge.hint;
+        difficulty.textContent = challenge.difficulty;
+        score.textContent = `${currentIndex}/3`;
+        feedback.style.color = '';
+        feedback.textContent = gateUnlocked
+            ? 'status: 题目已加载，别急着开摆。'
+            : 'blocked: 糖豆门还锁着。要么吃 100000 个，要么把代码改了。';
+        input.value = '';
+        input.disabled = !gateUnlocked;
+        submit.disabled = !gateUnlocked;
+        scene.innerHTML = challenge.scene;
+        if (audioCard) audioCard.hidden = !challenge.audio;
+        if (miscAudio && !challenge.audio) miscAudio.pause();
+
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('is-active', index === currentIndex);
+            dot.classList.toggle('is-solved', index < currentIndex);
+        });
+
+        bindSceneInteractions(challenge);
+
+        if (window.gsap && !prefersReducedMotion) {
+            gsap.fromTo(scene.children, { y: 22, opacity: 0 }, {
+                y: 0,
+                opacity: 1,
+                duration: 0.46,
+                stagger: 0.04,
+                ease: 'power3.out'
+            });
+        }
+
+        window.setTimeout(() => {
+            if (gateUnlocked) input.focus({ preventScroll: true });
+        }, 40);
+    }
+
+    function showClear() {
+        locked = true;
+        zone.dataset.gameState = 'clear';
+        score.textContent = '3/3';
+        dots.forEach((dot) => {
+            dot.classList.remove('is-active');
+            dot.classList.add('is-solved');
+        });
+        feedback.style.color = '#1e7a13';
+        feedback.textContent = 'accepted: 三题全过，彩虹通道开了。';
+        input.disabled = true;
+        submit.disabled = true;
+        if (miscAudio) miscAudio.pause();
+        clear.hidden = false;
+        if (clearLine) clearLine.textContent = clearLines[Math.floor(Math.random() * clearLines.length)];
+        playClearSound();
+
+        if (window.gsap && !prefersReducedMotion) {
+            gsap.fromTo(clear, { y: 36, opacity: 0 }, {
+                y: 0,
+                opacity: 1,
+                duration: 0.6,
+                ease: 'power3.out'
             });
         }
     }
 
-    playRandomSolo() {
-        // Resume AudioContext if suspended (browser policy)
-        if (this.ctx && this.ctx.state === 'suspended') {
-            this.ctx.resume().catch(e => console.log("AudioContext resume failed:", e));
+    function submitAnswer() {
+        if (locked) return;
+
+        if (!gateUnlocked) {
+            feedback.style.color = '#ff2d2d';
+            feedback.textContent = 'blocked: 糖豆门没开。逆向人不排队，逆向人 patch。';
+            return;
         }
-        
-        if (!this.ctx) return;
-        
-        // Simple pentatonic licks or random shred
-        const scale = [261.63, 311.13, 349.23, 392.00, 466.16, 523.25]; // C Minor Pentatonic
-        
-        const now = this.ctx.currentTime;
-        const notes = 5;
-        
-        for (let i = 0; i < notes; i++) {
-            const freq = scale[Math.floor(Math.random() * scale.length)];
-            const time = now + (i * 0.1);
-            
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            
-            osc.type = 'sawtooth';
+
+        const challenge = queue[currentIndex];
+        const answer = normalizeAnswer(input.value);
+        const accepted = challenge.answers.some((item) => normalizeAnswer(item) === answer);
+
+        if (!accepted) {
+            feedback.style.color = '#ff2d2d';
+            feedback.textContent = 'wrong: flag 没对上，但你的嘴硬很稳定。';
+            if (window.gsap && !prefersReducedMotion) {
+                gsap.fromTo('.answer-console', { x: -4 }, { x: 4, repeat: 3, yoyo: true, duration: 0.045, clearProps: 'transform' });
+            }
+            return;
+        }
+
+        locked = true;
+        feedback.style.color = '#1e7a13';
+        feedback.textContent = 'accepted: 这题被你打穿了，下一题正在换衣服。';
+        currentIndex += 1;
+        score.textContent = `${currentIndex}/3`;
+
+        if (currentIndex >= 3) {
+            window.setTimeout(showClear, 520);
+            return;
+        }
+
+        window.setTimeout(renderChallenge, 620);
+    }
+
+    function startRun() {
+        queue = shuffle(makeChallengePool()).slice(0, 3);
+        currentIndex = 0;
+        locked = false;
+        zone.dataset.gameState = 'playing';
+        clear.hidden = true;
+        resetCandyGate();
+        renderChallenge();
+        updateChallengeLock();
+    }
+
+    function playClearSound() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+
+        const ctx = new AudioContext();
+        const master = ctx.createGain();
+        master.gain.setValueAtTime(0.0001, ctx.currentTime);
+        master.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.03);
+        master.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.15);
+        master.connect(ctx.destination);
+
+        [523.25, 659.25, 783.99, 1046.5, 783.99, 987.77].forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const start = ctx.currentTime + index * 0.12;
+            osc.type = index % 2 ? 'square' : 'triangle';
             osc.frequency.value = freq;
-            
-            gain.gain.setValueAtTime(0, time);
-            gain.gain.linearRampToValueAtTime(0.5, time + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
-            
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.exponentialRampToValueAtTime(0.22, start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.18);
             osc.connect(gain);
-            gain.connect(this.distortion); // Use existing distortion
-            
-            osc.start(time);
-            osc.stop(time + 0.15);
-            
-            // Visual feedback on strings
-            setTimeout(() => {
-                this.animateString(Math.floor(Math.random() * 6));
-            }, i * 100);
-        }
-    }
-    
-    makeDistortionCurve(amount) {
-        const k = typeof amount === 'number' ? amount : 50;
-        const n_samples = 44100;
-        const curve = new Float32Array(n_samples);
-        const deg = Math.PI / 180;
-        
-        for (let i = 0; i < n_samples; ++i) {
-            const x = i * 2 / n_samples - 1;
-            curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
-        }
-        return curve;
-    }
-
-    setDistortion(val) {
-        this.distortion.curve = this.makeDistortionCurve(val);
-        this.distortion.oversample = '4x';
-    }
-
-    playNote(freq) {
-        if (this.ctx.state === 'suspended') {
-            this.ctx.resume();
-        }
-
-        const osc = this.ctx.createOscillator();
-        const noteGain = this.ctx.createGain();
-        
-        osc.type = 'sawtooth'; // Guitar-like
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        
-        // Envelope
-        noteGain.gain.setValueAtTime(0, this.ctx.currentTime);
-        noteGain.gain.linearRampToValueAtTime(1, this.ctx.currentTime + 0.01); // Attack
-        noteGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1.5); // Decay
-        
-        osc.connect(noteGain);
-        noteGain.connect(this.distortion);
-        
-        osc.start();
-        osc.stop(this.ctx.currentTime + 1.5);
-    }
-
-    playString(stringIndex, fretIndex) {
-        // Calculate frequency: f = base * 2^(fret/12)
-        const baseFreq = this.baseFreqs[stringIndex];
-        const freq = baseFreq * Math.pow(2, fretIndex / 12);
-        
-        this.playNote(freq);
-        this.animateString(stringIndex);
-        this.createVisualNote(stringIndex, fretIndex);
-    }
-
-    createVisualNote(stringIndex, fretIndex) {
-        const note = document.createElement('div');
-        note.classList.add('visual-note');
-        
-        // Position based on grid
-        // String height is ~50px (300px / 6)
-        // Fret width decreases log-ish or just linear for simple CSS
-        const stringHeight = 300 / 6;
-        const fretWidth = 100 / 13; // 12 frets + open
-        
-        const top = (stringIndex * stringHeight) + (stringHeight / 2);
-        const left = (fretIndex * fretWidth) + (fretWidth / 2);
-        
-        note.style.top = `${top}px`;
-        note.style.left = `${left}%`;
-        
-        this.fretboard.appendChild(note);
-        setTimeout(() => note.remove(), 1000);
-    }
-    
-    animateString(stringIndex) {
-        // Find the string element
-        const strings = this.fretboard.querySelectorAll('.string');
-        if (strings[stringIndex]) {
-            strings[stringIndex].classList.add('vibrating');
-            setTimeout(() => strings[stringIndex].classList.remove('vibrating'), 200);
-        }
-    }
-
-    initUI() {
-        this.fretboard.innerHTML = ''; // Clear existing
-        
-        // Add strings
-        this.baseFreqs.forEach((_, i) => {
-            const string = document.createElement('div');
-            string.classList.add('string');
-            // Calculate position to distribute 6 strings evenly within the fretboard height
-            // We use absolute positioning percentages
-            string.style.top = `${(i * 100) / 6 + (100/12)}%`; 
-            this.fretboard.appendChild(string);
+            gain.connect(master);
+            osc.start(start);
+            osc.stop(start + 0.2);
         });
 
-        // Add frets (vertical lines)
-        for (let i = 1; i <= 12; i++) {
-            const fret = document.createElement('div');
-            fret.classList.add('fret-line');
-            fret.style.left = `${(i * 100) / 13}%`;
-            fret.setAttribute('data-fret', i);
-            this.fretboard.appendChild(fret);
-            
-            // Fret markers (dots)
-            if ([3, 5, 7, 9, 12].includes(i)) {
-                const marker = document.createElement('div');
-                marker.classList.add('fret-dot');
-                marker.style.left = `${(i * 100) / 13 - (50/13)}%`; // Center between frets
-                if (i === 12) {
-                    // Double dot for 12th fret
-                    marker.classList.add('double');
-                }
-                this.fretboard.appendChild(marker);
-            }
-        }
-        
-        // Add fret numbers
-        const numbers = document.createElement('div');
-        numbers.classList.add('fret-numbers');
-        for (let i = 0; i <= 12; i++) {
-             const num = document.createElement('span');
-             num.textContent = i;
-             num.style.left = `${(i * 100) / 13}%`;
-             numbers.appendChild(num);
-        }
-        this.fretboard.appendChild(numbers);
+        window.setTimeout(() => ctx.close(), 1400);
     }
 
-    playTwinkleTwinkle() {
-        if (this.ctx.state === 'suspended') {
-            this.ctx.resume();
+    submit.addEventListener('click', submitAnswer);
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') submitAnswer();
+    });
+    retry?.addEventListener('click', startRun);
+
+    initCandyGate();
+    startRun();
+}
+
+function initPixelGame() {
+    const canvas = qs('#pixel-game');
+    const status = qs('#fragment-status');
+    const prompt = qs('#challenge-text');
+    const input = qs('#flag-answer');
+    const submit = qs('#submit-flag');
+    const result = qs('#flag-result');
+    if (!canvas || !status || !prompt || !input || !submit || !result) return;
+
+    const ctx = canvas.getContext('2d');
+    const tile = 16;
+    const cols = canvas.width / tile;
+    const rows = canvas.height / tile;
+    const player = { x: 2, y: 16, dir: 1 };
+    const exit = { x: 27, y: 2 };
+    const walls = new Set();
+    const fragments = [
+        { x: 6, y: 4, got: false },
+        { x: 15, y: 14, got: false },
+        { x: 24, y: 8, got: false }
+    ];
+    const challenges = [
+        {
+            title: 'base64 rehearsal',
+            body: 'decode this stage pass:\n\nZmxhZ3twaW5rX3BhbmljX3B3bn0=',
+            answer: 'flag{pink_panic_pwn}'
+        },
+        {
+            title: 'hex sticker',
+            body: 'from hex, with feeling:\n\n666c61677b68617070795f6861636b696e677d',
+            answer: 'flag{happy_hacking}'
+        },
+        {
+            title: 'rot13 distortion',
+            body: 'rot13 is a very serious crypto, probably:\n\nsynt{obppuv_ebpxf_cja}',
+            answer: 'flag{bocchi_rocks_pwn}'
+        },
+        {
+            title: 'reverse encore',
+            body: 'read it backwards before Bocchi evaporates:\n\n}edoc_ni_tsol{galf',
+            answer: 'flag{lost_in_code}'
         }
+    ];
+    const challenge = challenges[Math.floor(Math.random() * challenges.length)];
 
-        const melody = [
-            // Line 1: C C G G A A G
-            { key: 'A', dur: 0.5 }, { key: 'A', dur: 0.5 },
-            { key: 'G', dur: 0.5 }, { key: 'G', dur: 0.5 },
-            { key: 'H', dur: 0.5 }, { key: 'H', dur: 0.5 },
-            { key: 'G', dur: 1.0 },
-            
-            // Line 2: F F E E D D C
-            { key: 'F', dur: 0.5 }, { key: 'F', dur: 0.5 },
-            { key: 'D', dur: 0.5 }, { key: 'D', dur: 0.5 },
-            { key: 'S', dur: 0.5 }, { key: 'S', dur: 0.5 },
-            { key: 'A', dur: 1.0 },
+    function addWall(x, y) {
+        walls.add(`${x},${y}`);
+    }
 
-             // Line 3: G G F F E E D
-            { key: 'G', dur: 0.5 }, { key: 'G', dur: 0.5 },
-            { key: 'F', dur: 0.5 }, { key: 'F', dur: 0.5 },
-            { key: 'D', dur: 0.5 }, { key: 'D', dur: 0.5 },
-            { key: 'S', dur: 1.0 },
+    for (let x = 0; x < cols; x += 1) {
+        addWall(x, 0);
+        addWall(x, rows - 1);
+    }
 
-            // Line 4: G G F F E E D
-            { key: 'G', dur: 0.5 }, { key: 'G', dur: 0.5 },
-            { key: 'F', dur: 0.5 }, { key: 'F', dur: 0.5 },
-            { key: 'D', dur: 0.5 }, { key: 'D', dur: 0.5 },
-            { key: 'S', dur: 1.0 },
+    for (let y = 0; y < rows; y += 1) {
+        addWall(0, y);
+        addWall(cols - 1, y);
+    }
 
-            // Line 5: C C G G A A G
-            { key: 'A', dur: 0.5 }, { key: 'A', dur: 0.5 },
-            { key: 'G', dur: 0.5 }, { key: 'G', dur: 0.5 },
-            { key: 'H', dur: 0.5 }, { key: 'H', dur: 0.5 },
-            { key: 'G', dur: 1.0 },
+    for (let x = 4; x < 25; x += 1) {
+        if (![8, 17].includes(x)) addWall(x, 6);
+    }
 
-            // Line 6: F F E E D D C
-            { key: 'F', dur: 0.5 }, { key: 'F', dur: 0.5 },
-            { key: 'D', dur: 0.5 }, { key: 'D', dur: 0.5 },
-            { key: 'S', dur: 0.5 }, { key: 'S', dur: 0.5 },
-            { key: 'A', dur: 1.0 }
-        ];
+    for (let x = 7; x < 29; x += 1) {
+        if (![12, 23].includes(x)) addWall(x, 12);
+    }
 
-        let currentTime = this.ctx.currentTime;
-        let delay = 0;
+    for (let y = 3; y < 17; y += 1) {
+        if (![5, 10, 15].includes(y)) addWall(20, y);
+    }
 
-        melody.forEach(note => {
-            const freq = this.keyboardMap[note.key];
-            if (freq) {
-                const start = currentTime + delay;
-                
-                // Play note
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.value = freq;
-                
-                gain.gain.setValueAtTime(0, start);
-                gain.gain.linearRampToValueAtTime(0.5, start + 0.05);
-                gain.gain.exponentialRampToValueAtTime(0.01, start + note.dur - 0.05);
-                
-                osc.connect(gain);
-                gain.connect(this.distortion);
-                
-                osc.start(start);
-                osc.stop(start + note.dur);
+    for (let y = 8; y < 18; y += 1) {
+        if (![9, 16].includes(y)) addWall(10, y);
+    }
 
-                // Visual
-                setTimeout(() => {
-                    this.animateString(Math.floor(Math.random() * 6));
-                    const keyEl = document.querySelector(`.key[data-key="${note.key}"]`);
-                    if(keyEl) {
-                         keyEl.classList.add('active');
-                         setTimeout(() => keyEl.classList.remove('active'), note.dur * 1000 - 50);
+    function fillTile(x, y, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x * tile, y * tile, tile, tile);
+    }
+
+    function drawDitherTile(x, y) {
+        ctx.fillStyle = '#f0f0e9';
+        ctx.fillRect(x * tile, y * tile, tile, tile);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+        for (let py = 2; py < tile; py += 4) {
+            for (let px = (py / 2) % 4; px < tile; px += 4) {
+                ctx.fillRect(x * tile + px, y * tile + py, 1, 1);
+            }
+        }
+    }
+
+    function drawGrid() {
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (let y = 0; y < rows; y += 1) {
+            for (let x = 0; x < cols; x += 1) {
+                if ((x + y) % 2 === 0) {
+                    ctx.fillStyle = '#151515';
+                    ctx.fillRect(x * tile, y * tile, tile, tile);
+                }
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+                ctx.strokeRect(x * tile + 0.5, y * tile + 0.5, tile, tile);
+
+                if (walls.has(`${x},${y}`)) {
+                    if ((x + y) % 3 === 0) {
+                        drawDitherTile(x, y);
+                    } else {
+                        fillTile(x, y, '#f4f4ef');
                     }
-                }, delay * 1000);
-
-                delay += note.dur;
-            }
-        });
-    }
-
-    initEvents() {
-        // Play Button
-        const playBtn = document.getElementById('play-twinkle');
-        if (playBtn) {
-            playBtn.addEventListener('click', () => this.playTwinkleTwinkle());
-        }
-
-        // Keyboard (Simplified C Major Scale)
-        window.addEventListener('keydown', (e) => {
-            const key = e.key.toUpperCase();
-            if (this.keyboardMap[key]) {
-                this.playNote(this.keyboardMap[key]);
-                
-                // Visual feedback for keyboard is generic
-                this.animateString(Math.floor(Math.random() * 6)); 
-                
-                const keyEl = document.querySelector(`.key[data-key="${key}"]`);
-                if(keyEl) {
-                    keyEl.classList.add('active');
-                    setTimeout(() => keyEl.classList.remove('active'), 100);
                 }
             }
-        });
+        }
+    }
 
-        // Click on Fretboard (Advanced)
-        this.fretboard.addEventListener('click', (e) => {
-            const rect = this.fretboard.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            const width = rect.width;
-            const height = rect.height;
-            
-            // Determine String (0-5)
-            const stringHeight = height / 6;
-            const stringIndex = Math.floor(y / stringHeight);
-            
-            // Determine Fret (0-12)
-            const fretWidth = width / 13;
-            const fretIndex = Math.floor(x / fretWidth);
-            
-            if (stringIndex >= 0 && stringIndex < 6 && fretIndex >= 0 && fretIndex <= 12) {
-                this.playString(stringIndex, fretIndex);
+    function drawGate() {
+        fillTile(exit.x, exit.y, '#b7ff2a');
+        ctx.fillStyle = '#111';
+        ctx.fillRect(exit.x * tile + 4, exit.y * tile + 5, 8, 7);
+        ctx.fillStyle = '#f4f4ef';
+        ctx.fillRect(exit.x * tile + 7, exit.y * tile + 8, 2, 2);
+    }
+
+    function drawFragments() {
+        fragments.forEach((fragment, index) => {
+            if (fragment.got) return;
+
+            const x = fragment.x * tile;
+            const y = fragment.y * tile;
+            ctx.fillStyle = index === 1 ? '#ff6aa2' : '#b7ff2a';
+            ctx.fillRect(x + 5, y + 3, 6, 10);
+            ctx.fillStyle = '#f4f4ef';
+            ctx.fillRect(x + 7, y + 1, 2, 14);
+            ctx.fillStyle = '#111';
+            ctx.fillRect(x + 4, y + 12, 8, 2);
+        });
+    }
+
+    function drawPlayer() {
+        const x = player.x * tile;
+        const y = player.y * tile;
+
+        ctx.fillStyle = '#ff6aa2';
+        ctx.fillRect(x + 4, y + 1, 8, 5);
+        ctx.fillRect(x + 3, y + 5, 10, 3);
+        ctx.fillStyle = '#ffd8e7';
+        ctx.fillRect(x + 5, y + 6, 6, 4);
+        ctx.fillStyle = '#111';
+        ctx.fillRect(x + 5, y + 7, 2, 1);
+        ctx.fillRect(x + 10, y + 7, 1, 1);
+        ctx.fillStyle = '#f35f99';
+        ctx.fillRect(x + 4, y + 10, 8, 4);
+        ctx.fillStyle = '#52351f';
+        ctx.fillRect(x + (player.dir >= 0 ? 11 : 1), y + 9, 5, 2);
+        ctx.fillStyle = '#f4f4ef';
+        ctx.fillRect(x + 5, y + 14, 2, 2);
+        ctx.fillRect(x + 10, y + 14, 2, 2);
+    }
+
+    function draw() {
+        drawGrid();
+        drawGate();
+        drawFragments();
+        drawPlayer();
+
+        const count = fragments.filter((fragment) => fragment.got).length;
+        status.textContent = `FRAGMENTS ${count}/3`;
+
+        if (count === 3) {
+            prompt.textContent = `${challenge.title}\n\n${challenge.body}`;
+            result.textContent = 'status: challenge unlocked. 现在轮到脑子上台。';
+        }
+    }
+
+    function canMove(x, y) {
+        return x >= 0 && y >= 0 && x < cols && y < rows && !walls.has(`${x},${y}`);
+    }
+
+    function move(dx, dy) {
+        const nextX = player.x + dx;
+        const nextY = player.y + dy;
+        if (!canMove(nextX, nextY)) return;
+
+        player.x = nextX;
+        player.y = nextY;
+        if (dx) player.dir = dx;
+
+        fragments.forEach((fragment) => {
+            if (!fragment.got && fragment.x === player.x && fragment.y === player.y) {
+                fragment.got = true;
+                result.style.color = '';
+                result.textContent = 'fragment++  波奇酱：我只是路过，真的。';
             }
         });
 
-        // Controls
-        if(this.volControl) {
-            this.volControl.addEventListener('input', (e) => {
-                this.masterGain.gain.value = e.target.value;
-            });
-        }
-        
-        if(this.distControl) {
-            this.distControl.addEventListener('input', (e) => {
-                this.setDistortion(parseInt(e.target.value));
-            });
-        }
+        draw();
     }
+
+    const keyMap = {
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1],
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+        w: [0, -1],
+        s: [0, 1],
+        a: [-1, 0],
+        d: [1, 0],
+        W: [0, -1],
+        S: [0, 1],
+        A: [-1, 0],
+        D: [1, 0]
+    };
+
+    window.addEventListener('keydown', (event) => {
+        if (document.activeElement === input) return;
+        const vector = keyMap[event.key];
+        if (!vector) return;
+
+        event.preventDefault();
+        move(vector[0], vector[1]);
+    });
+
+    submit.addEventListener('click', () => {
+        const count = fragments.filter((fragment) => fragment.got).length;
+        if (count < 3) {
+            result.style.color = '#ff2d2d';
+            result.textContent = 'blocked: 先把三个碎片捡齐，别跳关。';
+            return;
+        }
+
+        if (input.value.trim() === challenge.answer) {
+            result.style.color = '#1e7a13';
+            result.textContent = 'accepted. flag 拿下，今晚少怀疑人生五分钟。';
+        } else {
+            result.style.color = '#ff2d2d';
+            result.textContent = 'wrong answer. 编码看一眼，别和它硬刚。';
+        }
+    });
+
+    draw();
 }
 
-class BocchiSticker {
-    constructor() {
-        this.sticker = document.getElementById('bocchi-sticker');
-        if (!this.sticker) return;
-        
-        this.basePath = 'assets/bocchi/bocchi0x00';
-        this.count = 19;
-        this.current = 0;
-        
-        this.init();
+function initMiscCipher() {
+    const dataEl = qs('#misc-cipher-data');
+    const previewEl = qs('#misc-flag-preview');
+    if (!dataEl || !previewEl) return;
+
+    const flags = [
+        'flag{password_123456_is_not_a_strategy}',
+        'flag{canary_saw_you_smashing_stack}',
+        'flag{gobot_said_strings_first}',
+        'flag{netease_cloud_wont_decode_it_for_you}',
+        'flag{stop_refreshing_and_solve_it}'
+    ];
+    const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const flag = flags[Math.floor(Math.random() * flags.length)];
+    const bytes = [...flag].map((char) => char.charCodeAt(0) ^ 0xa3);
+
+    let value = 0n;
+    bytes.forEach((byte) => {
+        value = (value << 8n) + BigInt(byte);
+    });
+
+    let encoded = '';
+    while (value > 0n) {
+        encoded = alphabet[Number(value % 62n)] + encoded;
+        value /= 62n;
     }
-    
-    init() {
-        // Randomly change sticker on click
-        this.sticker.addEventListener('click', () => {
-            this.changeSticker();
-            this.animateJump();
-        });
-        
-        // Auto change every 10s
-        setInterval(() => this.changeSticker(), 10000);
-    }
-    
-    changeSticker() {
-        // Random index 0-18
-        const idx = Math.floor(Math.random() * this.count);
-        // Convert to Hex (2 digits, uppercase)
-        const hex = idx.toString(16).toUpperCase().padStart(2, '0');
-        this.sticker.src = `${this.basePath}${hex}.gif`;
-    }
-    
-    animateJump() {
-        this.sticker.style.transform = 'translateY(-20px) rotate(10deg)';
-        setTimeout(() => {
-            this.sticker.style.transform = 'translateY(0) rotate(0deg)';
-        }, 200);
-    }
+
+    dataEl.textContent = `len=${bytes.length}\n${encoded || '0'}`;
+    previewEl.textContent = flag;
 }
 
-// Initialization
-document.addEventListener('DOMContentLoaded', () => {
-    new Loader();
-    new Cursor();
-    new CanvasBackground();
-    new SmoothScroll();
-    new GuitarCanvas(); // Add Guitar Canvas
-    new ScrollTransitions();
-    new GuitarSynth();
-    new BocchiSticker();
+window.addEventListener('DOMContentLoaded', () => {
+    splitText();
+    initSmoothScroll();
+    initAnchors();
+    initMotion();
+    initPointerDepth();
+    initDraggableBits();
+    initStageInteractions();
+    initGameZone();
+    initMiscCipher();
 });
